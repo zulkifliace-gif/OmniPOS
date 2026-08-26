@@ -1,0 +1,26 @@
+﻿[[redirects]]
+  from = "/"
+  to = "/arang-pos.html"
+  status = 200
+
+[[redirects]]
+  from = "/pos"
+  to = "/arang-pos.html"
+  status = 200
+
+[[redirects]]
+  from = "/loyalty"
+  to = "/arang-loyalty.html"
+  status = 200
+
+[[redirects]]
+  from = "/ahli"
+  to = "/arang-loyalty.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"

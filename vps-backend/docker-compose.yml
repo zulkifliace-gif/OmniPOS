@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 1. Node.js WhatsApp Bot & Backend API
+  api:
+    build: .
+    container_name: arang_vps_api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - WA_API_URL=${WA_API_URL}
+      - WA_API_TOKEN=${WA_API_TOKEN}
+    depends_on:
+      - redis
+    networks:
+      - arang_network
+
+  # 2. In-Memory Redis Cache for 3-Minute OTP & Lockouts
+  redis:
+    image: redis:7-alpine
+    container_name: arang_redis
+    restart: always
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - arang_network
+
+networks:
+  arang_network:
+    driver: bridge
+
+volumes:
+  redis_data:

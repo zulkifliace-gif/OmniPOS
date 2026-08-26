@@ -1,0 +1,4202 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Koffi — Kad Ahli</title>
+<link rel="icon" type="image/svg+xml" href="buy-me-coffee-icon.svg">
+<link rel="apple-touch-icon" href="buy-me-coffee-icon.svg">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root{
+    --bg:#0a0806;
+    --bg-warm:#120d0a;
+    --surface:#171210;
+    --surface-2:#1f1712;
+    --surface-3:#271d16;
+    --hairline:#2c221a;
+    --cream:#f3ead9;
+    --cream-dim:#c9bda9;
+    --muted:#8a7d6d;
+    --gold:#cda36a;
+    --gold-bright:#e6c48a;
+    --ember:#b45a2e;
+    --ember-bright:#d0723f;
+    --shadow-deep: 0 20px 50px -20px rgba(0,0,0,0.7);
+    --radius-lg: 26px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+  }
+
+  *{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-touch-callout:none;
+  }
+  html,body{
+    margin:0;
+    padding:0;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:pan-y;
+  }
+  body{
+    background:
+      radial-gradient(120% 60% at 50% -10%, #1c140d 0%, var(--bg) 55%),
+      var(--bg);
+    color:var(--cream);
+    font-family:'Manrope', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* Benarkan input borang dipilih dan ditaip dengan lancar */
+  input, textarea, select, [contenteditable="true"] {
+    -webkit-user-select:text !important;
+    -moz-user-select:text !important;
+    -ms-user-select:text !important;
+    user-select:text !important;
+    -webkit-touch-callout:default !important;
+    touch-action:auto !important;
+  }
+
+  .no-select-loyalty {
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:pan-y;
+  }
+
+  .app{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    position:relative;
+    padding:0 0 96px 0;
+    overflow-x:hidden;
+  }
+
+  /* faint film-grain / roast texture */
+  .app::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    max-width:430px;
+    margin:0 auto;
+    pointer-events:none;
+    opacity:0.05;
+    z-index:0;
+    background-image:radial-gradient(circle at 1px 1px, #fff 1px, transparent 0);
+    background-size:22px 22px;
+  }
+
+  .status-spacer{ height:env(safe-area-inset-top, 22px); }
+
+  /* ---------- HEADER ---------- */
+  header{
+    padding:14px 20px 6px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:relative;
+    z-index:1;
+    opacity:0;
+    animation:fadeUp .6s ease forwards;
+  }
+  .greet-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 4px;
+  }
+  .greet-name{
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    font-weight:600;
+    margin:0;
+    color:var(--cream);
+  }
+  .greet-name span{ color:var(--muted); font-weight:400; }
+
+  .scan-btn{
+    width:52px; height:52px;
+    border-radius:50%;
+    border:1px solid var(--hairline);
+    background:radial-gradient(circle at 35% 30%, #241a12, #140f0b 70%);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .scan-btn::after{
+    content:"";
+    position:absolute; inset:-6px;
+    border-radius:50%;
+    border:1px solid rgba(205,163,106,0.35);
+    animation:pulseRing 2.6s ease-out infinite;
+  }
+  .scan-btn svg{ width:22px; height:22px; position:relative; z-index:1; }
+  .scan-btn:active{ transform:scale(.93); transition:.15s; }
+
+  @keyframes pulseRing{
+    0%{ transform:scale(.92); opacity:.9; }
+    70%{ transform:scale(1.28); opacity:0; }
+    100%{ opacity:0; }
+  }
+
+  /* ---------- POINTS CARD ---------- */
+  .points-card{
+    margin:16px 20px 0;
+    border-radius:var(--radius-lg);
+    padding:22px 22px 20px;
+    background:
+      linear-gradient(155deg, #1c140c 0%, #100c09 70%);
+    border:1px solid var(--hairline);
+    box-shadow:var(--shadow-deep);
+    position:relative;
+    overflow:hidden;
+    z-index:1;
+    opacity:0;
+    animation:fadeUp .6s ease .08s forwards;
+  }
+  .points-card::before{
+    content:"";
+    position:absolute;
+    width:220px; height:220px;
+    right:-70px; top:-90px;
+    background:radial-gradient(circle, rgba(205,163,106,0.16), transparent 70%);
+  }
+
+  .points-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    position:relative; z-index:1;
+  }
+  .tier-badge{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--bg);
+    background:linear-gradient(120deg, var(--gold-bright), var(--gold));
+    padding:5px 10px;
+    border-radius:20px;
+    font-weight:600;
+  }
+  .points-label{
+    font-size:12px;
+    color:var(--muted);
+    margin:0 0 2px;
+  }
+
+  .points-mid{
+    display:flex; align-items:center; gap:16px;
+    margin-top:16px;
+    position:relative; z-index:1;
+  }
+
+  .ring-wrap{ position:relative; width:96px; height:96px; flex-shrink:0; }
+  .ring-wrap svg{ width:96px; height:96px; transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:#2a2019; stroke-width:8; }
+  .ring-fg{
+    fill:none; stroke:url(#ringGrad); stroke-width:8; stroke-linecap:round;
+    stroke-dasharray:251.2;
+    stroke-dashoffset:251.2;
+    transition:stroke-dashoffset 0.8s cubic-bezier(.3,.9,.4,1);
+  }
+  .ring-center{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--gold-bright); font-weight:600;
+  }
+
+  .points-count{
+    font-family:'Fraunces', serif;
+    font-size:40px;
+    font-weight:600;
+    line-height:1;
+    color:var(--cream);
+    letter-spacing:-.5px;
+  }
+  .points-count .unit{
+    font-family:'Manrope',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    color:var(--muted);
+    margin-left:5px;
+  }
+  .points-sub{
+    font-size:12.5px;
+    color:var(--cream-dim);
+    margin-top:6px;
+  }
+  .points-sub b{ color:var(--gold-bright); font-weight:700; }
+
+  /* ---------- SECTION HEADING ---------- */
+  .section{ margin:30px 20px 0; position:relative; z-index:1; }
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .section-title{
+    font-family:'Fraunces', serif;
+    font-size:18px; font-weight:600;
+    margin:0;
+    color:var(--cream);
+  }
+  .section-meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--gold);
+    letter-spacing:.04em;
+  }
+
+  /* ---------- STAMP CARD & MULTI-CARD SYSTEM ---------- */
+  .stamp-section-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .stamp-actions-row{
+    display:flex; align-items:center; gap:6px;
+  }
+  .btn-history-toggle{
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    color:var(--gold-bright);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    font-weight:600;
+    padding:5px 9px;
+    border-radius:14px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:5px;
+    transition:all .15s ease;
+  }
+  .btn-history-toggle:active{ transform:scale(.94); background:var(--surface-3); }
+  .btn-add-stamp-demo{
+    background:linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color:#241708;
+    border:none;
+    font-family:'Manrope', sans-serif;
+    font-size:11px;
+    font-weight:800;
+    padding:5px 10px;
+    border-radius:14px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:4px;
+    transition:transform .12s ease;
+  }
+  .btn-add-stamp-demo:active{ transform:scale(.92); }
+
+  /* Unclaimed Card Alert Banner */
+  .unclaimed-card-alert{
+    background:linear-gradient(145deg, #24160a, #130d07);
+    border:1px solid var(--gold);
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+    margin-bottom:12px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    box-shadow:0 8px 24px -6px rgba(205,163,106,0.22);
+    animation:fadeUp .3s ease;
+  }
+  .unclaimed-alert-info{ flex:1; min-width:0; }
+  .unclaimed-alert-title{
+    font-family:'Fraunces', serif;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--gold-bright);
+    margin:0 0 2px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .unclaimed-alert-desc{
+    font-size:11.5px;
+    color:var(--cream-dim);
+    margin:0;
+    line-height:1.4;
+  }
+
+  /* Stamp Card Box */
+  .stamp-card{
+    border-radius:var(--radius-lg);
+    background:linear-gradient(160deg, #17110c, #0f0b08);
+    border:1px solid var(--hairline);
+    padding:20px 18px 18px;
+    box-shadow:var(--shadow-deep);
+    position:relative;
+  }
+  .stamp-card-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .stamp-card-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--gold-bright);
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    padding:4px 10px;
+    border-radius:14px;
+    font-weight:600;
+  }
+  .stamp-card-progress{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:700;
+    color:var(--cream);
+  }
+  .stamp-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:14px 10px;
+  }
+  .stamp{
+    aspect-ratio:1;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    transition:transform .2s ease;
+  }
+  .stamp.filled{
+    background:radial-gradient(circle at 32% 28%, #e6c48a, #b8823f 55%, #8c5f2a 100%);
+    box-shadow:0 4px 10px -3px rgba(205,163,106,0.5), inset 0 0 0 1px rgba(255,235,200,0.25);
+  }
+  .stamp.empty{
+    background:var(--surface-2);
+    border:1.5px dashed #3a2c1f;
+  }
+  .stamp.next{
+    background:var(--surface-2);
+    border:1.5px dashed var(--gold);
+    animation:nextPulse 1.8s ease-in-out infinite;
+  }
+  .stamp svg{ width:16px; height:16px; }
+  .stamp.filled svg{ stroke:#3a2410; }
+  .stamp.empty svg,.stamp.next svg{ stroke:#4a3c2c; }
+
+  @keyframes nextPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(205,163,106,0.35); }
+    50%{ box-shadow:0 0 0 7px rgba(205,163,106,0); }
+  }
+
+  .stamp-foot{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:16px; padding-top:14px; border-top:1px solid var(--hairline);
+  }
+  .stamp-foot-text{ font-size:12px; color:var(--muted); }
+  .stamp-foot-text b{ color:var(--cream); }
+
+  /* History Panel */
+  .stamp-history-panel{
+    margin-top:12px;
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius-md);
+    padding:14px 14px 12px;
+    display:none;
+    animation:fadeUp .3s ease;
+  }
+  .stamp-history-panel.show{ display:block; }
+  .history-panel-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .history-panel-title{
+    font-family:'Fraunces', serif;
+    font-size:14px;
+    font-weight:600;
+    color:var(--cream);
+    margin:0;
+  }
+  .history-card-list{
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .history-card-item{
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:10px 12px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    transition:border-color .15s ease;
+  }
+  .history-card-item.unclaimed-item{
+    border-color:rgba(205,163,106,0.6);
+    background:rgba(205,163,106,0.06);
+  }
+  .history-item-left{ flex:1; min-width:0; }
+  .history-item-name{
+    font-size:13px; font-weight:700; color:var(--cream); margin:0 0 2px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .history-item-sub{
+    font-size:11px; color:var(--muted); margin:0;
+  }
+  .history-status-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    font-weight:600;
+    padding:3px 8px;
+    border-radius:12px;
+    white-space:nowrap;
+  }
+  .history-status-tag.active{
+    background:rgba(205,163,106,0.15);
+    color:var(--gold-bright);
+    border:1px solid rgba(205,163,106,0.3);
+  }
+  .history-status-tag.unclaimed{
+    background:rgba(208,114,63,0.2);
+    color:#fca5a5;
+    border:1px solid rgba(208,114,63,0.5);
+  }
+  .history-status-tag.claimed{
+    background:rgba(74,222,128,0.1);
+    color:#86efac;
+    border:1px solid rgba(74,222,128,0.25);
+  }
+
+  /* ---------- LUCKY DRAW (kept quiet, secondary card) ---------- */
+  .lucky-card{
+    border-radius:var(--radius-md);
+    background:var(--surface);
+    border:1px dashed var(--hairline);
+    padding:16px 16px 15px;
+    position:relative;
+    opacity:0;
+    animation:fadeUp .5s ease .05s forwards;
+  }
+  .lucky-state{ transition:opacity .25s ease; }
+  .lucky-row-head{ display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+  .lucky-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); margin:0;
+  }
+  .lucky-dot{
+    width:5px; height:5px; border-radius:50%;
+    background:var(--ember-bright);
+    box-shadow:0 0 0 0 rgba(208,114,63,.5);
+    animation:dotPulse 2s ease-in-out infinite;
+  }
+  @keyframes dotPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(208,114,63,.45); }
+    50%{ box-shadow:0 0 0 4px rgba(208,114,63,0); }
+  }
+  .lucky-hint{ font-size:12px; color:var(--cream-dim); margin:0 0 12px; }
+
+  .lucky-input-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .lucky-input{
+    flex:1; min-width:0;
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:11px 13px;
+    color:var(--cream);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:.03em;
+    outline:none;
+  }
+  .lucky-input::placeholder{ color:var(--muted); font-family:'Manrope',sans-serif; }
+  .lucky-input:focus{ border-color:var(--gold); }
+
+  .lucky-dice{
+    width:42px; height:42px; flex-shrink:0;
+    border-radius:12px;
+    border:1px solid var(--hairline);
+    background:var(--surface-3);
+    color:var(--gold-bright);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .lucky-dice svg{ width:19px; height:19px; }
+  .lucky-dice.spin svg{ animation:diceSpin .5s ease; }
+  @keyframes diceSpin{ from{ transform:rotate(0);} to{ transform:rotate(200deg);} }
+  .lucky-dice:active{ transform:scale(.92); }
+
+  .lucky-submit{
+    width:100%;
+    border:none; border-radius:12px;
+    padding:11px;
+    background:var(--surface-3);
+    border:1px solid var(--hairline);
+    color:var(--cream-dim);
+    font-family:'Manrope',sans-serif;
+    font-size:13px; font-weight:700;
+    cursor:pointer;
+    transition:transform .12s ease;
+  }
+  .lucky-submit:active{ transform:scale(.97); }
+  .lucky-submit.ready{ color:#241708; background:linear-gradient(120deg, var(--gold-bright), var(--gold)); border-color:transparent; }
+
+  /* winner notice state */
+  .lucky-win{ text-align:center; padding:6px 4px 2px; }
+  .lucky-win-icon{ font-size:30px; line-height:1; margin-bottom:6px; animation:winPop .5s cubic-bezier(.3,1.6,.4,1); }
+  @keyframes winPop{ from{ transform:scale(.3); opacity:0;} to{ transform:scale(1); opacity:1;} }
+  .lucky-win-title{
+    font-family:'Fraunces', serif; font-size:16.5px; font-weight:600;
+    color:var(--cream); margin:0 0 4px;
+  }
+  .lucky-win-prize{ font-size:13px; color:var(--gold-bright); font-weight:700; margin:0 0 3px; }
+  .lucky-win-code{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); margin:0 0 14px; }
+  .lucky-qr-btn{
+    display:inline-flex; align-items:center; gap:8px;
+    border:none; border-radius:24px;
+    padding:10px 18px;
+    background:linear-gradient(120deg, var(--gold-bright), var(--gold));
+    color:#241708;
+    font-family:'Manrope',sans-serif; font-size:12.5px; font-weight:700;
+    cursor:pointer;
+  }
+  .lucky-qr-btn svg{ width:16px; height:16px; }
+  .lucky-qr-btn:active{ transform:scale(.94); }
+
+  /* Scroll locking when modal is open (no movement allowed) */
+  html.modal-locked, body.modal-locked{
+    overflow:hidden;
+  }
+
+  /* ---------- QR / PRIZE MODAL (NO BLUR) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    max-width:430px; margin:0 auto;
+    background:rgba(5,4,3,0.92);
+    display:flex; align-items:flex-end;
+    z-index:100;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .modal-sheet{
+    width:100%;
+    background:linear-gradient(165deg, #19130d, #0e0a07);
+    border:1px solid var(--hairline);
+    border-bottom:none;
+    border-radius:28px 28px 0 0;
+    padding:10px 22px calc(28px + env(safe-area-inset-bottom,0px));
+    text-align:center;
+    transform:translateY(100%);
+    transition:transform .32s cubic-bezier(.25,.9,.35,1);
+  }
+  .modal-overlay.show .modal-sheet{ transform:translateY(0); }
+  .modal-handle{ width:36px; height:4px; border-radius:3px; background:var(--hairline); margin:8px auto 16px; }
+  .modal-title{ font-family:'Fraunces', serif; font-size:17px; font-weight:600; color:var(--cream); margin:0 0 3px; }
+  .modal-sub{ font-size:12px; color:var(--muted); margin:0 0 18px; }
+
+  .prize-visual{
+    width:132px; height:132px; margin:0 auto 18px;
+    border-radius:26px;
+    background:radial-gradient(circle at 35% 25%, #2a1e13, #140f0a 75%);
+    border:1px solid var(--hairline);
+    display:flex; align-items:center; justify-content:center;
+    font-size:52px;
+  }
+
+  .qr-box{
+    width:170px; height:170px; margin:0 auto 16px;
+    background:#f3ead9;
+    border-radius:16px;
+    padding:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .qr-box svg{ width:100%; height:100%; }
+
+  .modal-code{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; font-weight:600;
+    color:var(--gold-bright);
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    display:inline-block;
+    padding:8px 16px;
+    border-radius:20px;
+    margin-bottom:18px;
+    letter-spacing:.05em;
+  }
+
+  .modal-close{
+    width:100%;
+    border:none; border-radius:16px;
+    padding:13px;
+    background:var(--surface-3);
+    border:1px solid var(--hairline);
+    color:var(--cream);
+    font-family:'Manrope',sans-serif; font-size:13.5px; font-weight:700;
+    cursor:pointer;
+  }
+  .modal-close:active{ transform:scale(.98); }
+
+  /* ---------- LOGIN MODAL (NO BLUR, SOLID DARK, LOCKED SCREEN) ---------- */
+  .login-modal-overlay{
+    position:fixed; inset:0;
+    max-width:430px; margin:0 auto;
+    background:rgba(6,4,3,0.94);
+    display:flex; align-items:flex-end;
+    z-index:200;
+    opacity:0; pointer-events:none;
+    transition:opacity .28s ease;
+  }
+  .login-modal-overlay.show{
+    opacity:1; pointer-events:auto;
+  }
+  .login-sheet{
+    width:100%;
+    background:linear-gradient(168deg, #1c150e 0%, #0f0b08 100%);
+    border:1px solid var(--hairline);
+    border-bottom:none;
+    border-radius:28px 28px 0 0;
+    padding:12px 22px calc(24px + env(safe-area-inset-bottom, 12px));
+    transform:translateY(100%);
+    transition:transform .34s cubic-bezier(.22, 1, .36, 1);
+    box-sizing:border-box;
+  }
+  .login-modal-overlay.show .login-sheet{
+    transform:translateY(0);
+  }
+  .login-handle{
+    width:36px; height:4px; border-radius:3px;
+    background:var(--hairline); margin:6px auto 14px;
+  }
+  .login-header-box{
+    text-align:center; margin-bottom:16px; position:relative;
+  }
+  .login-brand-tag{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--gold-bright);
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    padding:4px 12px; border-radius:20px;
+    margin-bottom:8px;
+  }
+  .login-brand-tag svg{ width:12px; height:12px; stroke:var(--gold-bright); }
+  .login-title{
+    font-family:'Fraunces', serif;
+    font-size:20px; font-weight:600;
+    color:var(--cream);
+    margin:0 0 4px;
+  }
+  .login-desc{
+    font-size:12.5px;
+    color:var(--cream-dim);
+    margin:0 auto;
+    max-width:320px;
+    line-height:1.45;
+  }
+  .login-close-btn{
+    position:absolute; right:0; top:0;
+    background:var(--surface-2); border:1px solid var(--hairline);
+    color:var(--muted); width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .login-close-btn:active{ background:var(--surface-3); color:var(--cream); }
+  .login-close-btn svg{ width:16px; height:16px; }
+
+  /* Phone input section */
+  .login-field-label{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin:0 0 6px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .phone-input-row{
+    display:flex; align-items:center; gap:8px;
+    margin-bottom:12px;
+  }
+  .phone-prefix-pill{
+    display:flex; align-items:center; gap:6px;
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:11px 13px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px; font-weight:600;
+    color:var(--cream);
+    flex-shrink:0;
+  }
+  .phone-prefix-pill span.flag{ font-size:15px; }
+  .login-phone-input{
+    flex:1; min-width:0;
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:11px 14px;
+    color:var(--cream);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px; font-weight:600;
+    letter-spacing:.04em;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  .login-phone-input::placeholder{
+    color:var(--muted); font-family:'Manrope', sans-serif; font-weight:400;
+  }
+  .login-phone-input:focus{
+    border-color:var(--gold);
+    background:var(--surface-3);
+  }
+
+  /* OTP Action Button (WhatsApp Single Button) */
+  .otp-actions{
+    display:flex; flex-direction:column; gap:8px;
+    margin-bottom:12px;
+  }
+  .btn-wa-otp{
+    width:100%;
+    padding:13px 16px;
+    border-radius:12px;
+    background:#123522;
+    border:1px solid #1f6b3e;
+    color:#4ade80;
+    font-family:'Manrope', sans-serif;
+    font-size:13.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    cursor:pointer;
+    transition:all .15s ease;
+    box-sizing:border-box;
+  }
+  .btn-wa-otp:hover:not(:disabled), .btn-wa-otp:active:not(:disabled){
+    background:#17462c;
+    border-color:#22c55e;
+    color:#86efac;
+    transform:scale(.98);
+  }
+  .btn-wa-otp:disabled{
+    background:var(--surface-2);
+    border-color:var(--hairline);
+    color:var(--muted);
+    cursor:not-allowed;
+    opacity:0.85;
+  }
+  .btn-wa-otp svg{ width:18px; height:18px; fill:currentColor; flex-shrink:0; }
+
+  /* OTP Notification Banner (Demo Helper) */
+  .otp-sent-banner{
+    background:rgba(205,163,106,0.12);
+    border:1px dashed var(--gold);
+    border-radius:12px;
+    padding:10px 14px;
+    margin-bottom:12px;
+    font-size:12px;
+    color:var(--gold-bright);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .otp-sent-banner b{ font-family:'IBM Plex Mono', monospace; font-size:14px; letter-spacing:.08em; }
+
+  /* OTP inputs row */
+  .otp-verify-section{
+    border-top:1px solid var(--hairline);
+    padding-top:14px;
+    margin-top:2px;
+  }
+  .otp-digits-row{
+    display:flex; justify-content:center; gap:10px;
+    margin:10px 0 10px;
+  }
+  .otp-box{
+    width:46px; height:52px;
+    border-radius:12px;
+    background:var(--surface-2);
+    border:1.5px solid var(--hairline);
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:22px; font-weight:700;
+    color:var(--cream);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .otp-box:focus{
+    border-color:var(--gold-bright);
+    box-shadow:0 0 0 3px rgba(205,163,106,0.22);
+    background:var(--surface-3);
+  }
+
+  .otp-timer-badge{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-bottom:12px;
+  }
+  .otp-timer-badge span.time{
+    color:var(--gold-bright);
+    font-weight:700;
+  }
+
+  .btn-verify-otp{
+    width:100%;
+    padding:13px;
+    border-radius:14px;
+    background:linear-gradient(120deg, var(--gold-bright), var(--gold));
+    color:#241708;
+    font-family:'Manrope', sans-serif;
+    font-size:14px; font-weight:800;
+    border:none;
+    cursor:pointer;
+    transition:transform .12s ease, opacity .2s ease;
+  }
+  .btn-verify-otp:active{ transform:scale(.98); }
+  .btn-verify-otp:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  /* Attempt warning & 1-Hour Lockout UI */
+  .otp-attempt-badge{
+    font-size:11.5px;
+    font-weight:700;
+    color:#f87171;
+    text-align:center;
+    margin-top:6px;
+    margin-bottom:10px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .otp-lockout-banner{
+    background:rgba(239, 68, 68, 0.12);
+    border:1px solid rgba(239, 68, 68, 0.35);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-top:10px;
+    margin-bottom:12px;
+    text-align:center;
+  }
+  .otp-lockout-title{
+    color:#f87171;
+    font-weight:700;
+    font-size:13px;
+    margin:0 0 4px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .otp-lockout-desc{
+    color:var(--cream-dim);
+    font-size:11.5px;
+    margin:0 0 8px;
+    line-height:1.4;
+  }
+  .otp-lockout-timer{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    font-weight:700;
+    color:#fca5a5;
+    background:rgba(0,0,0,0.4);
+    padding:4px 12px;
+    border-radius:8px;
+    display:inline-block;
+  }
+  .shake{
+    animation: shakeAnim 0.4s ease;
+  }
+  @keyframes shakeAnim{
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  /* ---------- NOTIFICATION BELL & BADGE ---------- */
+  .notif-btn{
+    width:44px; height:44px;
+    border-radius:50%;
+    border:1px solid var(--hairline);
+    background:radial-gradient(circle at 35% 30%, #241a12, #140f0b 70%);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    cursor:pointer;
+    flex-shrink:0;
+    color:var(--cream);
+    transition:transform .15s ease;
+  }
+  .notif-btn:active{ transform:scale(.92); }
+  .notif-btn svg{ width:20px; height:20px; }
+  .notif-badge{
+    position:absolute;
+    top:2px; right:2px;
+    background:#ef4444;
+    color:#ffffff;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    font-weight:800;
+    width:18px; height:18px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid #140f0b;
+    box-shadow:0 0 8px rgba(239,68,68,0.6);
+    line-height:1;
+  }
+
+  /* ---------- NOTIFICATION DRAWER / MODAL (NO BLUR) ---------- */
+  .notif-modal-overlay{
+    position:fixed; inset:0;
+    max-width:430px; margin:0 auto;
+    background:rgba(6,4,3,0.92);
+    display:flex; align-items:flex-end;
+    z-index:210;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .notif-modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .notif-sheet{
+    width:100%;
+    background:linear-gradient(168deg, #1c140d, #0d0a07);
+    border:1px solid var(--hairline);
+    border-bottom:none;
+    border-radius:28px 28px 0 0;
+    padding:12px 20px calc(24px + env(safe-area-inset-bottom, 12px));
+    transform:translateY(100%);
+    transition:transform .32s cubic-bezier(.22, 1, .36, 1);
+  }
+  .notif-modal-overlay.show .notif-sheet{ transform:translateY(0); }
+
+  /* ---------- NOTIFICATION CARDS (TERANG VS PUDAR) ---------- */
+  .notif-card-item{
+    border-radius: 14px;
+    padding: 13px 14px;
+    cursor: pointer;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    user-select: none;
+  }
+  .notif-card-item:active{
+    transform: scale(0.98);
+  }
+  /* Item Belum Ditekan (Unread) - Block Terang & Berkilau */
+  .notif-card-item.notif-unread{
+    background: linear-gradient(135deg, rgba(205,163,106,0.18) 0%, rgba(36,26,18,0.98) 100%);
+    border: 1px solid var(--gold-bright);
+    box-shadow: 0 4px 18px rgba(205,163,106,0.2), inset 0 0 14px rgba(205,163,106,0.08);
+    opacity: 1;
+  }
+  .notif-card-item.notif-unread .notif-card-title{
+    color: #fff8f0;
+    font-weight: 800;
+  }
+  .notif-card-item.notif-unread .notif-card-desc{
+    color: var(--cream);
+  }
+  .notif-unread-dot{
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239,68,68,0.9);
+    display: inline-block;
+    animation: pulseDot 1.4s infinite;
+  }
+  @keyframes pulseDot{
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.7; }
+  }
+
+  /* Item Dah Ditekan (Read) - Block Pudar Sikit */
+  .notif-card-item.notif-read{
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    opacity: 0.45;
+    filter: grayscale(20%);
+  }
+  .notif-card-item.notif-read:hover{
+    opacity: 0.75;
+    background: rgba(255,255,255,0.04);
+  }
+  .notif-card-item.notif-read .notif-card-title{
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .notif-card-item.notif-read .notif-card-desc{
+    color: var(--cream-dim);
+  }
+
+  /* ---------- PROMO AUTO COUNTDOWN FLOATING TOAST ---------- */
+  .promo-countdown-toast{
+    position:fixed;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%) translateY(-120px);
+    width:calc(100% - 32px);
+    max-width:398px;
+    background:linear-gradient(135deg, rgba(36,25,17,0.97) 0%, rgba(18,13,9,0.98) 100%);
+    border:1px solid var(--gold);
+    border-radius:18px;
+    padding:10px 14px 12px;
+    z-index:230;
+    box-shadow:0 14px 36px rgba(0,0,0,0.85), 0 0 22px rgba(205,163,106,0.25);
+    opacity:0;
+    pointer-events:none;
+    transition:transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    overflow:hidden;
+  }
+  .promo-countdown-toast.show{
+    transform:translateX(-50%) translateY(0);
+    opacity:1;
+    pointer-events:auto;
+  }
+  .promo-countdown-bar{
+    position:absolute;
+    bottom:0; left:0;
+    height:3px;
+    background:linear-gradient(90deg, var(--gold-bright), #ef4444);
+    width:100%;
+    transition:width 1s linear;
+  }
+  .promo-countdown-content{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .promo-countdown-icon{
+    font-size:22px;
+    animation:flameBounce 1.1s infinite alternate;
+  }
+  @keyframes flameBounce{
+    from{ transform:scale(1) rotate(-4deg); }
+    to{ transform:scale(1.2) rotate(4deg); }
+  }
+  .promo-quick-open-btn{
+    background:linear-gradient(120deg, var(--gold-bright), var(--gold));
+    color:#1e140a;
+    border:none;
+    border-radius:10px;
+    font-size:10.5px;
+    font-weight:800;
+    padding:6px 11px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:transform .15s ease;
+  }
+  .promo-quick-open-btn:active{ transform:scale(0.92); }
+  .promo-quick-close-btn{
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    padding:4px 6px;
+    border-radius:50%;
+  }
+
+  /* ---------- PROMO / ADS POPUP MODAL (NO BLUR, SOLID DARK OVERLAY) ---------- */
+  .promo-modal-overlay{
+    position:fixed; inset:0;
+    max-width:430px; margin:0 auto;
+    background:rgba(5, 4, 3, 0.93);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    z-index:250;
+    opacity:0; pointer-events:none;
+    transition:opacity .28s ease;
+  }
+  .promo-modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .promo-box{
+    width:100%;
+    max-width:400px;
+    max-height:92vh;
+    overflow-y:auto;
+    background:linear-gradient(165deg, #221810 0%, #120d09 100%);
+    border:1px solid var(--gold);
+    border-radius:24px;
+    padding:18px;
+    position:relative;
+    box-shadow:0 25px 60px -15px rgba(0,0,0,0.9);
+    text-align:center;
+    transform:scale(.92);
+    transition:transform .3s cubic-bezier(.2, .9, .3, 1.2);
+  }
+  .promo-media-box{
+    width:100%;
+    max-height:min(440px, 52vh);
+    min-height:160px;
+    border-radius:16px;
+    background:radial-gradient(circle at 40% 35%, #2a1b12 0%, #0d0805 90%);
+    border:1px solid var(--hairline);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .promo-media-box img,
+  .promo-media-box video{
+    width:100%;
+    height:auto;
+    max-height:min(440px, 52vh);
+    object-fit:contain;
+    display:block;
+    border-radius:14px;
+  }
+  .promo-news-divider{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    margin:2px 0 12px;
+  }
+  .promo-news-line{
+    flex:1;
+    height:1px;
+    background:linear-gradient(90deg, transparent, rgba(205,163,106,0.45), transparent);
+  }
+  .promo-news-text{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.25em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    opacity:0.92;
+  }
+  .promo-modal-overlay.show .promo-box{ transform:scale(1); }
+  .promo-close-btn{
+    position:absolute; top:12px; right:12px;
+    background:var(--surface-2); border:1px solid var(--hairline);
+    color:var(--cream); width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:700;
+  }
+  .promo-close-btn:active{ background:var(--surface-3); transform:scale(.9); }
+
+  /* ---------- REWARD LIST ---------- */
+  .reward-list{ display:flex; flex-direction:column; gap:12px; }
+  .reward-card{
+    display:flex; align-items:center; gap:14px;
+    padding:14px;
+    border-radius:var(--radius-md);
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    opacity:0;
+    animation:fadeUp .5s ease forwards;
+  }
+  .reward-icon{
+    width:50px; height:50px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    background:linear-gradient(155deg, #241a11, #150f0b);
+    border:1px solid var(--hairline);
+  }
+  .reward-icon svg{ width:24px; height:24px; stroke:var(--gold-bright); }
+  .reward-info{ flex:1; min-width:0; }
+  .reward-name{ font-size:14.5px; font-weight:700; color:var(--cream); margin:0 0 3px; }
+  .reward-cost{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--muted); }
+  .reward-cost.ok{ color:var(--gold); }
+
+  .info-guide-btn{
+    width:24px; height:24px;
+    border-radius:50%;
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    color:var(--gold-bright);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    padding:0;
+    transition:all .15s ease;
+  }
+  .info-guide-btn:hover{
+    background:var(--surface-3);
+    border-color:var(--gold);
+    transform:scale(1.05);
+  }
+  .info-guide-btn:active{
+    transform:scale(.92);
+  }
+
+  .reward-card.eligible{
+    background:linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(20, 83, 45, 0.12) 100%);
+    border:1px solid rgba(74, 222, 128, 0.35);
+    box-shadow:0 4px 20px -5px rgba(34, 197, 94, 0.15);
+  }
+  .reward-card.eligible .reward-icon{
+    background:linear-gradient(155deg, rgba(20, 83, 45, 0.4), #150f0b);
+    border-color:rgba(74, 222, 128, 0.3);
+  }
+  .reward-card.eligible .reward-icon svg{
+    stroke:#4ade80;
+  }
+
+  .reward-status-badge{
+    font-family:'Manrope', sans-serif;
+    font-size:11.5px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:20px;
+    flex-shrink:0;
+    letter-spacing:.02em;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+  .reward-status-badge.eligible{
+    background:rgba(34, 197, 94, 0.15);
+    color:#4ade80;
+    border:1px solid rgba(74, 222, 128, 0.4);
+  }
+  .reward-status-badge.locked{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--hairline);
+    font-size:11px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+  }
+
+  /* toast */
+  .toast{
+    position:fixed;
+    left:50%; bottom:100px;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--cream);
+    color:#1a1209;
+    font-size:13px; font-weight:700;
+    padding:12px 20px;
+    border-radius:30px;
+    box-shadow:0 12px 30px -8px rgba(0,0,0,0.6);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:50;
+    max-width:calc(100% - 80px);
+    text-align:center;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- BOTTOM NAV (NO BLUR, 3 ITEMS) ---------- */
+  .bottom-nav{
+    position:fixed;
+    bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:430px;
+    padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    background:#0d0a08;
+    border-top:1px solid var(--hairline);
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    text-align:center;
+    z-index:10;
+  }
+  .nav-item{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    color:var(--muted);
+    font-size:11px; font-weight:600;
+    background:none; border:none; cursor:pointer;
+    padding:4px 8px;
+    position:relative;
+    transition:color .15s ease;
+  }
+  .nav-item svg{ width:22px; height:22px; }
+  .nav-item.active{ color:var(--gold-bright); font-weight:700; }
+  .nav-item.active::before{
+    content:"";
+    position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    width:20px; height:2.5px; border-radius:2px;
+    background:var(--gold-bright);
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="status-spacer"></div>
+
+  <header>
+    <div>
+      <p class="greet-eyebrow">Koffi · Kad Ahli</p>
+      <h1 class="greet-name" id="greetName">Selamat petang,<br><span id="userName">Aiman</span></h1>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <!-- Butang Loceng Notifikasi -->
+      <button class="notif-btn" id="btnNotification" aria-label="Pemberitahuan & Promosi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+        <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- POINTS -->
+  <div class="points-card" id="pointsCard">
+    <div class="points-top">
+      <div>
+        <p class="points-label">Baki Mata Ganjaran</p>
+      </div>
+      <span class="tier-badge" id="tierBadge">Tetamu</span>
+    </div>
+    <div class="points-mid">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 96 96">
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#e6c48a"/>
+              <stop offset="100%" stop-color="#b45a2e"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="48" cy="48" r="40"/>
+          <circle class="ring-fg" id="ringFgCircle" cx="48" cy="48" r="40" style="stroke-dashoffset:251;"/>
+        </svg>
+        <div class="ring-center" id="ringCenter">0%</div>
+      </div>
+      <div>
+        <div class="points-count" id="pointsCount">0<span class="unit">mata</span></div>
+        <p class="points-sub" id="pointsSub" style="cursor:pointer;">Log masuk untuk lihat Baki Mata Ganjaran / Cop Stamp</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAMP CARD MULTI-CARD SECTION -->
+  <div class="section" id="stampSection">
+    <div class="stamp-section-head">
+      <h2 class="section-title">Cop Stamp</h2>
+      <div class="stamp-actions-row">
+        <button type="button" class="btn-history-toggle" id="btnHistoryToggle" aria-label="Lihat Sejarah Kad">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+          <span id="historyBtnText">Sejarah (3)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Banner Kad Penuh Sedia Ditebus (Jika ada) -->
+    <div id="unclaimedBannerContainer"></div>
+
+    <!-- Kad Semasa / Aktif -->
+    <div class="stamp-card" id="activeStampCard">
+      <div class="stamp-card-top">
+        <span class="stamp-card-badge" id="activeCardBadge">Kad Semasa (Kad #3)</span>
+        <span class="stamp-card-progress" id="activeCardProgress">4 / 10 Cop</span>
+      </div>
+      <div class="stamp-grid" id="stampGrid"></div>
+      <div class="stamp-foot">
+        <p class="stamp-foot-text" id="stampFootText">Kumpul <b>6 cop lagi</b> untuk 1 kopi percuma</p>
+      </div>
+    </div>
+
+    <!-- Panel Sejarah Kad Cop -->
+    <div class="stamp-history-panel" id="stampHistoryPanel">
+      <div class="history-panel-head">
+        <h3 class="history-panel-title">Sejarah Kad Ahli</h3>
+        <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);" id="historyTotalCount">3 Kad Keseluruhan</span>
+      </div>
+      <div class="history-card-list" id="historyCardList"></div>
+    </div>
+  </div>
+
+  <!-- LUCKY DRAW -->
+  <div class="section">
+    <div class="lucky-card" id="luckyCard">
+
+      <!-- CABUTAN BERTUAH / LUCKY DRAW (5 PETAK PIN STYLE) -->
+      <div class="lucky-state" id="luckyForm">
+        <div class="lucky-row-head" style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <p class="lucky-eyebrow" style="margin:0;">Cabutan Bertuah</p>
+            <button type="button" class="info-guide-btn" id="btnLuckyGuide" title="Panduan Tebus Hadiah" aria-label="Panduan Tebus Hadiah" style="background:rgba(205,163,106,0.14); border:1px solid rgba(205,163,106,0.3); width:24px; height:24px; border-radius:50%; cursor:pointer; color:var(--gold-bright); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-weight:800; font-size:12px;">
+              i
+            </button>
+            <button type="button" class="info-guide-btn" id="btnLuckyPrizesShow" title="Senarai Hadiah Cabutan Bertuah" aria-label="Senarai Hadiah Cabutan Bertuah" style="background:rgba(205,163,106,0.14); border:1px solid rgba(205,163,106,0.3); width:24px; height:24px; border-radius:50%; cursor:pointer; color:var(--gold-bright); display:flex; align-items:center; justify-content:center; font-size:12.5px;">
+              🎁
+            </button>
+          </div>
+          <span class="lucky-dot"></span>
+        </div>
+
+        <p class="lucky-hint">Masukkan 5-aksara kod bertuah di resit anda</p>
+        
+        <!-- 5 Petak UI Macam PIN -->
+        <div class="lucky-pin-container" style="display:flex; justify-content:center; gap:8px; margin:14px 0 12px;">
+          <input type="text" class="lucky-pin-box" data-idx="0" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:46px; height:52px; text-align:center; font-size:22px; font-weight:800; font-family:'IBM Plex Mono',monospace; background:var(--surface-2); border:1.5px solid var(--hairline); border-radius:12px; color:var(--gold-bright); outline:none; transition:border-color .15s, transform .15s;">
+          <input type="text" class="lucky-pin-box" data-idx="1" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:46px; height:52px; text-align:center; font-size:22px; font-weight:800; font-family:'IBM Plex Mono',monospace; background:var(--surface-2); border:1.5px solid var(--hairline); border-radius:12px; color:var(--gold-bright); outline:none; transition:border-color .15s, transform .15s;">
+          <input type="text" class="lucky-pin-box" data-idx="2" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:46px; height:52px; text-align:center; font-size:22px; font-weight:800; font-family:'IBM Plex Mono',monospace; background:var(--surface-2); border:1.5px solid var(--hairline); border-radius:12px; color:var(--gold-bright); outline:none; transition:border-color .15s, transform .15s;">
+          <input type="text" class="lucky-pin-box" data-idx="3" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:46px; height:52px; text-align:center; font-size:22px; font-weight:800; font-family:'IBM Plex Mono',monospace; background:var(--surface-2); border:1.5px solid var(--hairline); border-radius:12px; color:var(--gold-bright); outline:none; transition:border-color .15s, transform .15s;">
+          <input type="text" class="lucky-pin-box" data-idx="4" maxlength="1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:46px; height:52px; text-align:center; font-size:22px; font-weight:800; font-family:'IBM Plex Mono',monospace; background:var(--surface-2); border:1.5px solid var(--hairline); border-radius:12px; color:var(--gold-bright); outline:none; transition:border-color .15s, transform .15s;">
+        </div>
+
+        <button class="lucky-submit" id="luckySubmit" style="width:100%;">Sertai Cabutan</button>
+      </div>
+
+      <!-- Paparan Kemenangan (Winner Screen) -->
+      <div class="lucky-state lucky-win" id="luckyWin" hidden style="text-align:center; padding:18px 14px;">
+        <div class="lucky-win-icon" style="font-size:38px; margin-bottom:4px;">🎉</div>
+        <p class="lucky-win-title" style="font-size:18px; font-weight:800; color:var(--gold-bright); margin:0 0 6px;">Tahniah! Anda Menang</p>
+        <p class="lucky-win-prize" id="luckyPrizeName" style="font-size:20px; font-weight:800; color:var(--cream); margin:0 0 4px;">Kopi Latte Percuma</p>
+        <p class="lucky-win-code" id="luckyWinCode" style="font-size:13px; font-family:'IBM Plex Mono',monospace; color:var(--muted); margin:0 0 14px;">Kod: —</p>
+        
+        <div style="background:rgba(205,163,106,0.12); border:1px dashed var(--gold); border-radius:12px; padding:12px; margin-bottom:14px; text-align:left;">
+          <p style="font-size:11.5px; font-weight:700; color:var(--gold-bright); margin:0 0 3px;">📍 Panduan Penebusan di Kaunter:</p>
+          <p style="font-size:12px; color:var(--cream-dim); margin:0; line-height:1.4;">1. Pergi ke kaunter sebut <b>"Nak claim hadiah"</b>, staf akan minta nombor telefon anda.</p>
+        </div>
+
+        <button type="button" class="ghost-btn" id="btnLuckyEnterAgain" style="width:100%; justify-content:center; padding:10px; font-size:12.5px;">Masukkan Kod Lain</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- REWARDS -->
+  <div class="section" id="rewardsSection" style="margin-bottom:10px;">
+    <div class="section-head" style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <h2 class="section-title">Tebus Ganjaran</h2>
+        <button type="button" class="info-guide-btn" id="btnRewardGuide" title="Panduan Tebus Ganjaran" aria-label="Panduan Tebus Ganjaran">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="reward-list" id="rewardList"></div>
+  </div>
+
+  <!-- REWARD GUIDE MODAL (POPUP GUIDE CLAIM GANJARAN) -->
+  <div class="modal-overlay" id="rewardGuideModal">
+    <div class="modal-sheet" style="text-align:left; max-width:400px; margin:0 auto;">
+      <div class="modal-handle"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 class="modal-title" style="font-size:16.5px; margin:0; display:flex; align-items:center; gap:8px;">
+          <span style="color:var(--gold-bright);">ℹ️</span> Panduan Tebus Ganjaran
+        </h3>
+        <button type="button" class="promo-close-btn" id="rewardGuideCloseBtn" aria-label="Tutup" style="position:static; width:30px; height:30px;">✕</button>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+        <!-- Step 1 -->
+        <div style="display:flex; gap:12px; align-items:center; background:var(--surface-2); border:1px solid var(--hairline); border-radius:14px; padding:13px 15px;">
+          <div style="width:26px; height:26px; border-radius:50%; background:rgba(205,163,106,0.18); color:var(--gold-bright); font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+          <div style="font-size:13px; color:var(--cream); line-height:1.45;">
+            Kena cukup mata dan label <b>'Layak'</b> keluar.
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div style="display:flex; gap:12px; align-items:center; background:var(--surface-2); border:1px solid var(--hairline); border-radius:14px; padding:13px 15px;">
+          <div style="width:26px; height:26px; border-radius:50%; background:rgba(205,163,106,0.18); color:var(--gold-bright); font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">2</div>
+          <div style="font-size:13px; color:var(--cream); line-height:1.45;">
+            Pergi ke kaunter sebut <b>"Nak claim ganjaran"</b>, staf akan minta nombor telefon.
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="modal-close" id="rewardGuideOkBtn" style="width:100%; border:none; border-radius:14px; padding:12px; background:linear-gradient(120deg, var(--gold-bright), var(--gold)); color:#241708; font-weight:700; font-size:13px; cursor:pointer;">Faham</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Ganjaran berjaya ditebus ☕</div>
+
+  <!-- BOTTOM NAV (NO BLUR, 3 ITEMS) -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="navStamp">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>Stamp</span>
+    </button>
+    <button class="nav-item" id="navGanjaran">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8H4v-8"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7c-2 0-4-1.5-4-3.5S9.5 1 11 1s1 3 1 6z"/><path d="M12 7c2 0 4-1.5 4-3.5S14.5 1 13 1s-1 3-1 6z"/></svg>
+      <span>Ganjaran</span>
+    </button>
+    <button class="nav-item" id="navAuthBtn">
+      <svg id="navAuthIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      <span id="navAuthLabel">Log Masuk</span>
+    </button>
+  </nav>
+
+  <!-- POPUP PROMO & ADS MODAL (NO BLUR, LIVE SUPABASE DRIVEN) -->
+  <div class="promo-modal-overlay" id="promoModal">
+    <div class="promo-box">
+      <button class="promo-close-btn" id="promoCloseBtn" aria-label="Tutup promosi">✕</button>
+      
+      <div class="promo-news-divider" id="promoBadgeTag">
+        <span class="promo-news-line"></span>
+        <span class="promo-news-text">─── news ───</span>
+        <span class="promo-news-line"></span>
+      </div>
+
+      <!-- Banner Visual / Gambar / Video Promosi Live (Menyokong Portrait, 1:1, Landscape) -->
+      <div id="promoMediaBox" class="promo-media-box">
+      </div>
+
+      <h3 id="promoTitleText" style="font-family:'Fraunces',serif; font-size:18px; font-weight:700; color:var(--cream); margin:0 0 6px;"></h3>
+      <p id="promoDescText" style="font-size:12px; color:var(--cream-dim); line-height:1.45; margin:0 0 16px;"></p>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button type="button" class="gen-btn" id="btnClaimPromo" style="width:100%; justify-content:center; padding:12px; background:linear-gradient(120deg,var(--gold-bright),var(--gold)); color:#241708; font-weight:800; font-size:13px; border:none; border-radius:14px; cursor:pointer;">
+          🎁 Lihat Ganjaran Ahli
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMO AUTO COUNTDOWN FLOATING TOAST (5 SAAT AUTO POPUP) -->
+  <div id="promoAutoCountdownToast" class="promo-countdown-toast">
+    <div class="promo-countdown-bar" id="promoCountdownBar"></div>
+    <div class="promo-countdown-content">
+      <span class="promo-countdown-icon">🔥</span>
+      <div style="flex:1; text-align:left;">
+        <div style="font-size:12px; font-weight:800; color:var(--gold-bright); letter-spacing:-0.2px;">Tawaran Terkini Koffi</div>
+        <div style="font-size:11px; color:var(--cream-dim); margin-top:1px;">Paparan dibuka dalam <b id="promoCountdownSec" style="color:#fff; font-family:'IBM Plex Mono',monospace; font-size:12px;">5</b>s...</div>
+      </div>
+      <button type="button" class="promo-quick-open-btn" id="btnQuickOpenPromo">Buka Sekarang</button>
+      <button type="button" class="promo-quick-close-btn" id="btnQuickDismissPromo" title="Batal Countdown">✕</button>
+    </div>
+  </div>
+
+  <!-- MODAL: PANDUAN TEBUS HADIAH (1 LANGKAH RINGKAS) -->
+  <div class="modal-overlay" id="luckyGuideModal">
+    <div class="modal-sheet" style="max-width:360px; width:92%; padding:24px 20px; border-radius:22px; text-align:center; background:linear-gradient(168deg, #1c140d, #0d0a07); border:1px solid var(--hairline); box-shadow:0 20px 40px rgba(0,0,0,0.85); margin:auto; position:relative;">
+      <button type="button" class="promo-close-btn" id="btnCloseLuckyGuideX" aria-label="Tutup" style="position:absolute; top:14px; right:14px; width:30px; height:30px;">✕</button>
+      
+      <div style="width:46px; height:46px; border-radius:50%; background:rgba(205,163,106,0.18); border:1.5px solid var(--gold); color:var(--gold-bright); font-size:22px; font-weight:800; font-family:'IBM Plex Mono',monospace; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+        i
+      </div>
+      <h3 style="font-family:'Fraunces',serif; font-size:18px; margin:0 0 10px; color:var(--cream);">Panduan Tebus Hadiah</h3>
+      
+      <div style="background:var(--surface-2); border:1px solid var(--hairline); border-radius:14px; padding:16px 14px; margin-bottom:18px; text-align:left;">
+        <p style="font-size:13.5px; line-height:1.45; color:var(--cream); margin:0;">
+          <b>1.</b> Pergi ke kaunter sebut <b>"Nak claim hadiah"</b>, staf akan minta nombor telefon.
+        </p>
+      </div>
+
+      <button type="button" class="modal-close" id="btnCloseLuckyGuide" style="width:100%; padding:12px; border-radius:14px; font-size:13px; font-weight:800; background:linear-gradient(120deg,var(--gold-bright),var(--gold)); color:#241708; border:none; cursor:pointer;">
+        Faham
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL POP-UP: MAKLUM BALAS KOD CABUTAN BERTUAH (TIADA HADIAH / TIDAK SAH / GAGAL) -->
+  <div class="modal-overlay" id="luckyStatusModal">
+    <div class="modal-sheet" style="max-width:370px; width:92%; padding:26px 20px 22px; border-radius:24px; text-align:center; background:linear-gradient(168deg, #1c140d, #0d0a07); border:1px solid var(--hairline); box-shadow:0 24px 50px rgba(0,0,0,0.9); margin:auto; position:relative;">
+      <button type="button" class="promo-close-btn" id="btnCloseLuckyStatusX" aria-label="Tutup" style="position:absolute; top:14px; right:14px; width:32px; height:32px; font-size:15px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,0.08); color:var(--cream); border:1px solid var(--hairline); cursor:pointer;">✕</button>
+
+      <!-- Ikon / Visual Dinamik -->
+      <div id="luckyStatusIconWrap" style="width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-size:28px;">
+        <span id="luckyStatusIcon">🎁</span>
+      </div>
+
+      <!-- Tajuk Pop-up -->
+      <h3 id="luckyStatusTitle" style="font-family:'Fraunces',serif; font-size:1.25rem; font-weight:700; color:var(--cream); margin:0 0 6px;">
+        Tiada Hadiah Dimenangi
+      </h3>
+
+      <!-- Kod Yang Diisi -->
+      <div id="luckyStatusCodeBadge" style="display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:700; padding:4px 14px; border-radius:8px; background:rgba(205,163,106,0.12); color:var(--gold-bright); border:1px solid rgba(205,163,106,0.25); letter-spacing:0.08em; margin-bottom:10px;">
+        KOD: 8%V1M
+      </div>
+
+      <!-- Mesej Penerangan -->
+      <p id="luckyStatusMessage" style="font-size:13px; color:var(--muted); line-height:1.55; margin:0 0 14px;">
+        Kod anda sah, namun tiada ganjaran bagi pusingan ini. Terima kasih atas penyertaan anda!
+      </p>
+
+      <!-- Box Had Percubaan (Jika Ralat / Percubaan Gagal) -->
+      <div id="luckyStatusAttemptBox" style="display:none; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:9px 12px; margin-bottom:16px; font-size:12px; color:#f87171; font-weight:600; line-height:1.4;">
+        ⚠️ Percubaan gagal: <span id="luckyStatusAttemptCount">1</span>/5. Akaun/sesi akan dihadkan jika melebihi 5 kali.
+      </div>
+
+      <!-- Butang Tindakan -->
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button type="button" class="btn" id="btnLuckyStatusAction" style="flex:1; height:44px; font-size:13.5px; font-weight:800; border-radius:12px; background:linear-gradient(135deg, var(--gold), var(--gold-bright)); color:#1a1006; border:none; cursor:pointer; box-shadow:0 4px 14px rgba(205,163,106,0.35);">
+          Cuba Lagi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP MODAL: SENARAI HADIAH CABUTAN BERTUAH (SLIDING CAROUSEL) -->
+  <div class="modal-overlay" id="luckyPrizesModal">
+    <div class="modal-sheet" style="max-width:390px; width:92%; padding:20px 18px 22px; border-radius:24px; text-align:center; background:linear-gradient(168deg, #1c140d, #0d0a07); border:1px solid var(--hairline); box-shadow:0 24px 48px rgba(0,0,0,0.9); margin:auto; position:relative;">
+      <div class="modal-handle"></div>
+      <button type="button" class="promo-close-btn" id="btnCloseLuckyPrizes" aria-label="Tutup" style="position:absolute; top:14px; right:14px; width:30px; height:30px;">✕</button>
+
+      <!-- Header Title: -- Hadiah Cabutan Bertuah -- -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px; font-weight:800; color:var(--gold-bright); letter-spacing:0.8px; text-transform:uppercase;">
+          ── Hadiah Cabutan Bertuah ──
+        </div>
+        <p style="font-size:11.5px; color:var(--muted); margin:3px 0 0;">Senarai hadiah eksklusif yang ditetapkan dari kaunter</p>
+      </div>
+
+      <!-- Slider / Carousel Wrap -->
+      <div id="luckyPrizesSliderWrap" style="position:relative; width:100%; overflow:hidden; border-radius:18px; background:var(--surface-2); border:1px solid var(--hairline); margin-bottom:12px;">
+        <div id="luckyPrizesTrack" style="display:flex; transition:transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); width:100%;">
+          <div style="padding:40px 20px; color:var(--muted); font-size:12px; width:100%;">Memuatkan hadiah...</div>
+        </div>
+
+        <!-- Prev & Next Arrow Buttons -->
+        <button type="button" id="btnLuckyPrevSlide" style="position:absolute; left:8px; top:45%; transform:translateY(-50%); width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.18); color:#fff; display:none; align-items:center; justify-content:center; cursor:pointer; z-index:10; font-size:16px;">‹</button>
+        <button type="button" id="btnLuckyNextSlide" style="position:absolute; right:8px; top:45%; transform:translateY(-50%); width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.18); color:#fff; display:none; align-items:center; justify-content:center; cursor:pointer; z-index:10; font-size:16px;">›</button>
+      </div>
+
+      <!-- Dots Indicator -->
+      <div id="luckyPrizesDots" style="display:flex; justify-content:center; gap:6px; margin-bottom:14px; min-height:8px;"></div>
+
+      <button type="button" class="modal-close" id="btnLuckyPrizesOk" style="width:100%; padding:12px; border-radius:14px; font-size:13px; font-weight:800; background:linear-gradient(120deg,var(--gold-bright),var(--gold)); color:#241708; border:none; cursor:pointer;">
+        Tutup
+      </button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATION DRAWER / MODAL (NO BLUR, DYNAMIC LIVE UPDATES) -->
+  <div class="notif-modal-overlay" id="notifModal">
+    <div class="notif-sheet">
+      <div class="modal-handle"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:8px;">
+        <div>
+          <h3 style="font-family:'Fraunces',serif; font-size:17px; font-weight:600; color:var(--cream); margin:0 0 2px;">Pemberitahuan &amp; Berita</h3>
+          <p style="font-size:11.5px; color:var(--muted); margin:0;">Kemaskini tawaran &amp; ganjaran terkini Koffi</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" id="btnMarkAllRead" style="background:rgba(205,163,106,0.12); border:1px solid rgba(205,163,106,0.3); color:var(--gold-bright); font-size:10.5px; font-weight:700; padding:5px 9px; border-radius:10px; cursor:pointer; display:none; white-space:nowrap;">Tanda Semua Dibaca</button>
+          <button type="button" class="mini-btn" id="notifCloseBtn" style="padding:4px 8px; cursor:pointer;">✕</button>
+        </div>
+      </div>
+
+      <div id="notifListContainer" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto;">
+        <!-- Akan dimuatkan secara dinamik oleh loadNotifications() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- QR + PRIZE MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <p class="modal-title">Kod Tebusan Hadiah</p>
+      <p class="modal-sub">Tunjukkan skrin ini kepada kaunter</p>
+
+      <div class="prize-visual" id="prizeVisual">🥤</div>
+
+      <div class="qr-box">
+        <svg viewBox="0 0 29 29" id="qrSvg"></svg>
+      </div>
+
+      <div class="modal-code" id="modalCode">ARG-4821</div>
+
+      <button class="modal-close" id="modalClose">Tutup</button>
+    </div>
+  </div>
+
+  <!-- POPUP LOGIN MODAL (NO BLUR, SCREEN LOCKED) -->
+  <div class="login-modal-overlay" id="loginModal">
+    <div class="login-sheet">
+      <div class="login-handle"></div>
+      
+      <div class="login-header-box">
+        <button class="login-close-btn" id="loginCloseBtn" aria-label="Tutup popup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+        <div class="login-brand-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M17 4.5C13 2.5 7 4 5 9c-2 5 0 10 5 11.5 5 1.5 10-1 11.5-6C22.7 9.4 20 6 17 4.5Z"/><path d="M8 16c2-3 2-7 6-9"/></svg>
+          Koffi Coffee
+        </div>
+        <h2 class="login-title">Log Masuk</h2>
+        <p class="login-desc">Masukkan nombor telefon untuk menerima kod OTP dan akses baki mata ganjaran anda.</p>
+      </div>
+
+      <!-- Ruang Nombor Telefon -->
+      <div class="login-field-label">
+        <span>Nombor Telefon</span>
+        <span style="font-size:10.5px;color:var(--gold);text-transform:none;font-weight:600;">Maks. 15 Angka</span>
+      </div>
+      <div class="phone-input-row">
+        <div class="phone-prefix-pill">
+          <span class="flag">🇲🇾</span>
+          <span>+60</span>
+        </div>
+        <input type="tel" id="loginPhoneInput" class="login-phone-input" placeholder="012-345 6789" maxlength="18" autocomplete="tel">
+      </div>
+
+      <!-- Butang Request OTP via WhatsApp Sahaja (1 Butang) -->
+      <div class="otp-actions">
+        <button type="button" class="btn-wa-otp" id="btnWaOtp">
+          <svg viewBox="0 0 24 24">
+            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 6.46 17.5 2 12.04 2M12.05 3.67C16.58 3.67 20.28 7.37 20.28 11.9C20.28 16.43 16.58 20.13 12.05 20.13C10.59 20.13 9.18 19.74 7.95 19L7.54 18.76L4.41 19.58L5.25 16.53L4.99 16.11C4.19 14.83 3.77 13.39 3.77 11.9C3.77 7.37 7.47 3.67 12.05 3.67M9.27 7.34C9.08 7.34 8.78 7.41 8.52 7.69C8.26 7.97 7.51 8.67 7.51 10.1C7.51 11.53 8.56 12.91 8.7 13.1C8.85 13.29 10.76 16.24 13.68 17.5C16.1 18.55 16.6 18.33 17.12 18.28C17.65 18.23 18.82 17.59 19.06 16.91C19.3 16.23 19.3 15.65 19.23 15.53C19.16 15.41 18.97 15.34 18.69 15.2C18.4 15.06 17.02 14.38 16.76 14.28C16.5 14.19 16.32 14.14 16.13 14.42C15.94 14.71 15.4 15.34 15.24 15.53C15.08 15.72 14.92 15.74 14.63 15.6C14.35 15.46 13.43 15.16 12.35 14.2C11.51 13.45 10.94 12.52 10.78 12.24C10.61 11.95 10.76 11.8 10.91 11.66C11.04 11.53 11.2 11.32 11.34 11.16C11.49 11 11.54 10.88 11.63 10.69C11.72 10.5 11.68 10.34 11.61 10.2C11.54 10.06 10.97 8.68 10.74 8.12C10.51 7.58 10.28 7.65 10.11 7.65C9.95 7.64 9.77 7.34 9.27 7.34Z"/>
+          </svg>
+          <span id="btnWaOtpText">Minta Kod OTP via WhatsApp</span>
+        </button>
+      </div>
+
+      <!-- Ruang Sahkan OTP -->
+      <div class="otp-verify-section">
+        <div class="login-field-label">
+          <span>Sahkan Kod OTP</span>
+          <span style="font-size:10.5px;color:var(--muted);text-transform:none;font-weight:600;">4 Digit</span>
+        </div>
+
+        <div class="otp-digits-row" id="otpDigitsRow">
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp1" autocomplete="one-time-code">
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp2">
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp3">
+          <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp4">
+        </div>
+
+        <div class="otp-attempt-badge" id="otpAttemptBadge" style="display:none;">
+          ⚠️ Baki percubaan: <span id="attemptCount">5</span> kali
+        </div>
+
+        <div class="otp-lockout-banner" id="otpLockoutBanner" style="display:none;">
+          <div class="otp-lockout-title">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Akaun Disekat Sementara
+          </div>
+          <div class="otp-lockout-desc">Melebihi had 5 kali percubaan salah. Sila cuba lagi selepas:</div>
+          <div class="otp-lockout-timer" id="lockoutTimerText">59:59</div>
+        </div>
+
+        <div class="otp-timer-badge" id="otpTimerContainer" style="visibility:hidden;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Kod OTP tamat tempoh dalam: <span class="time" id="otpTimerText">03:00</span>
+        </div>
+
+        <button type="button" class="btn-verify-otp" id="btnVerifyOtp">Sahkan OTP & Log Masuk</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- SEKAT COPY / TOUCH-TO-SEARCH / CONTEXT MENU PADA ELEMEN BUKAN INPUT ----
+  document.addEventListener('contextmenu', (e) => {
+    const tag = e.target ? e.target.tagName : '';
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener('selectstart', (e) => {
+    const tag = e.target ? e.target.tagName : '';
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  });
+
+  // ---- SUPABASE & BACKEND CONFIGURATION ----
+  window.SUPABASE_URL = 'https://ixkcmhorkbgqpmgxqnbk.supabase.co';
+  window.SUPABASE_ANON_KEY = 'sb_publishable_9bErvPIaPF0rY1RjLl_nQw_NXZPSA2n';
+  const SUPABASE_URL = window.SUPABASE_URL;
+  const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+
+  const VPS_BACKEND_URL = (function() {
+    try {
+      const customUrl = localStorage.getItem('koffi_vps_backend_url');
+      if (customUrl && customUrl.trim().startsWith('http')) {
+        return customUrl.trim().replace(/\/+$/, '');
+      }
+    } catch(e){}
+
+    if (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http')) {
+      if (window.location.port && window.location.port !== '3000' && window.location.port !== '' && window.location.port !== '80' && window.location.port !== '443') {
+        return `${window.location.protocol}//${window.location.hostname}:3000`;
+      }
+      return window.location.origin;
+    }
+    return 'http://localhost:3000';
+  })();
+  window.VPS_BACKEND_URL = VPS_BACKEND_URL;
+
+  (function initSupabaseLoyalty() {
+    try {
+      const lib = window.supabase;
+      if (lib && typeof lib.createClient === 'function') {
+        window._sb = lib.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        window.supabase = window._sb;
+        console.log('✅ Supabase Loyalty Client Initialized:', window.SUPABASE_URL);
+      } else {
+        console.error('❌ Supabase CDN tidak wujud atau belum siap dimuat!');
+      }
+    } catch (e) {
+      console.error('❌ Supabase Loyalty init gagal:', e);
+    }
+  })();
+
+  // Auto-attach ngrok bypass header to API fetch calls
+  (function setupLoyaltyFetchInterceptor() {
+    const originalFetch = window.fetch;
+    window.fetch = async function(url, options = {}) {
+      const urlStr = String(url);
+      if (urlStr.startsWith('/') || urlStr.includes('/api/')) {
+        options.headers = options.headers || {};
+        if (options.headers instanceof Headers) {
+          if (!options.headers.has('ngrok-skip-browser-warning')) {
+            options.headers.set('ngrok-skip-browser-warning', 'true');
+          }
+        } else if (Array.isArray(options.headers)) {
+          if (!options.headers.some(([k]) => k.toLowerCase() === 'ngrok-skip-browser-warning')) {
+            options.headers.push(['ngrok-skip-browser-warning', 'true']);
+          }
+        } else {
+          options.headers['ngrok-skip-browser-warning'] = 'true';
+        }
+      }
+      return await originalFetch(url, options);
+    };
+  })();
+
+  // Helper Universal Media URL Resolution (Fix Localhost, Relative & Ngrok Mixed Content)
+  function resolveMediaUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+    
+    if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed;
+
+    const VPS_BACKEND_URL = window.VPS_BACKEND_URL || 'http://localhost:3000';
+
+    // Jika URL mengandungi localhost:3000 atau 127.0.0.1:3000 tetapi pengguna mengakses via ngrok / domain online
+    if (trimmed.includes('localhost:3000') || trimmed.includes('127.0.0.1:3000')) {
+      const pathPart = trimmed.replace(/^https?:\/\/(localhost|127\.0\.0\.1):3000/, '');
+      return `${VPS_BACKEND_URL}${pathPart.startsWith('/') ? pathPart : '/' + pathPart}`;
+    }
+
+    // Jika laluan relatif cth: /uploads/...
+    if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/')) {
+      const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+      return `${VPS_BACKEND_URL}${cleanPath}`;
+    }
+
+    // Jika pautan http biasa diakses dalam halaman https (Mixed Content fix)
+    if (window.location.protocol === 'https:' && trimmed.startsWith('http://')) {
+      try {
+        const u = new URL(trimmed);
+        if (u.hostname === window.location.hostname) {
+          return `https://${u.host}${u.pathname}${u.search}`;
+        }
+      } catch(e){}
+    }
+
+    return trimmed;
+  }
+
+  // Global State & Utilities
+  function escapeHtml(str){
+    if(!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  function showToast(msg, duration = 3000){
+    const t = document.getElementById('toast');
+    if(!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    if(window._toastTimer) clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => {
+      t.classList.remove('show');
+    }, duration);
+  }
+
+  let currentLiveNotifications = [];
+  let activeLivePromo = null;
+
+  // ---- Background scroll locking helpers ----
+  function lockScroll(){
+    document.body.classList.add('modal-locked');
+    document.documentElement.classList.add('modal-locked');
+  }
+  function unlockScroll(){
+    const loginOpen = document.getElementById('loginModal')?.classList.contains('show');
+    const qrOpen = document.getElementById('modalOverlay')?.classList.contains('show');
+    const promoOpen = document.getElementById('promoModal')?.classList.contains('show');
+    const notifOpen = document.getElementById('notifModal')?.classList.contains('show');
+    const prizeOpen = document.getElementById('luckyPrizesModal')?.classList.contains('show');
+    const rGuideOpen = document.getElementById('rewardGuideModal')?.classList.contains('show');
+    const lGuideOpen = document.getElementById('luckyGuideModal')?.classList.contains('show');
+    const statusOpen = document.getElementById('luckyStatusModal')?.classList.contains('show');
+    if(!loginOpen && !qrOpen && !promoOpen && !notifOpen && !prizeOpen && !rGuideOpen && !lGuideOpen && !statusOpen){
+      document.body.classList.remove('modal-locked');
+      document.documentElement.classList.remove('modal-locked');
+    }
+  }
+
+  // ---- POINTS ENGINE ----
+  function renderPointsUI(session){
+    const el = document.getElementById('pointsCount');
+    const pointsSub = document.getElementById('pointsSub');
+    const tierBadge = document.getElementById('tierBadge');
+    const ringCenter = document.getElementById('ringCenter');
+    const ringFg = document.getElementById('ringFgCircle');
+
+    if(!session || !session.phone){
+      if(el) el.innerHTML = '0<span class="unit">mata</span>';
+      if(tierBadge) tierBadge.textContent = 'Tetamu';
+      if(ringCenter) ringCenter.textContent = '0%';
+      if(ringFg) ringFg.style.strokeDashoffset = '251.2';
+      if(pointsSub){
+        pointsSub.innerHTML = '<span style="color:var(--gold-bright); font-weight:600;">Log masuk untuk lihat Baki Mata Ganjaran / Cop Stamp →</span>';
+        pointsSub.onclick = () => openLoginPopup();
+      }
+      return;
+    }
+
+    const pts = typeof session.points === 'number' ? Math.max(0, session.points) : 0;
+    if(el){
+      el.innerHTML = pts + '<span class="unit">mata</span>';
+    }
+
+    let tierName = 'Ahli Gangsa';
+    let nextTierName = 'Ahli Perak';
+    let targetPts = 250;
+    let percent = 0;
+
+    if(pts >= 1000){
+      tierName = 'VIP';
+      nextTierName = 'Status Tertinggi';
+      targetPts = 1000;
+      percent = 100;
+    } else if(pts >= 500){
+      tierName = 'Ahli Emas';
+      nextTierName = 'VIP (1,000 Mata)';
+      targetPts = 1000;
+      percent = Math.min(100, Math.max(1, Math.round(((pts - 500) / 500) * 100)));
+    } else if(pts >= 250){
+      tierName = 'Ahli Perak';
+      nextTierName = 'Ahli Emas (500 Mata)';
+      targetPts = 500;
+      percent = Math.min(100, Math.max(1, Math.round(((pts - 250) / 250) * 100)));
+    } else {
+      tierName = 'Ahli Gangsa';
+      nextTierName = 'Ahli Perak (250 Mata)';
+      targetPts = 250;
+      percent = pts > 0 ? Math.min(100, Math.max(1, Math.round((pts / 250) * 100))) : 0;
+    }
+
+    if(tierBadge) tierBadge.textContent = tierName;
+    if(ringCenter) ringCenter.textContent = percent + '%';
+    if(ringFg){
+      const offset = 251.2 - (251.2 * (percent / 100));
+      ringFg.style.strokeDashoffset = String(Math.max(0, offset));
+    }
+
+    if(pointsSub){
+      const needed = Math.max(0, targetPts - pts);
+      if(pts >= 1000){
+        pointsSub.innerHTML = `🌟 Tahniah! Anda adalah ahli status tertinggi (<b>${tierName}</b>).`;
+      } else if(needed > 0){
+        pointsSub.innerHTML = `Perlukan <b>${needed} mata</b> lagi untuk ${nextTierName}`;
+      } else {
+        pointsSub.innerHTML = `🎉 Tahniah! Anda telah mencapai status <b>${tierName}</b>.`;
+      }
+      pointsSub.onclick = null;
+    }
+  }
+
+  // ---- MULTI-CARD STAMP SYSTEM & LIVE BACKEND CONNECTION ----
+  const beanSVG = (stroke) => `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round"><path d="M17 4.5C13 2.5 7 4 5 9c-2 5 0 10 5 11.5 5 1.5 10-1 11.5-6C22.7 9.4 20 6 17 4.5Z"/><path d="M8 16c2-3 2-7 6-9"/></svg>`;
+
+  // Bersih daripada data dummy — Data kad cop stamp dimuatkan sepenuhnya secara langsung dari Supabase
+  let stampCards = [];
+
+  const grid = document.getElementById('stampGrid');
+  const activeCardBadge = document.getElementById('activeCardBadge');
+  const activeCardProgress = document.getElementById('activeCardProgress');
+  const stampFootText = document.getElementById('stampFootText');
+  const unclaimedBannerContainer = document.getElementById('unclaimedBannerContainer');
+  const stampHistoryPanel = document.getElementById('stampHistoryPanel');
+  const historyCardList = document.getElementById('historyCardList');
+  const historyTotalCount = document.getElementById('historyTotalCount');
+  const btnHistoryToggle = document.getElementById('btnHistoryToggle');
+  const historyBtnText = document.getElementById('historyBtnText');
+  let loyaltyStampTarget = 10;
+
+  async function fetchLiveLoyaltyStampSettings(){
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/stamps/settings`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && data.settings && data.settings.stampTarget){
+          loyaltyStampTarget = parseInt(data.settings.stampTarget, 10) || 10;
+          const s = getSavedSession();
+          renderStampSystem(s);
+        }
+      }
+    } catch(e){}
+  }
+
+  // Muat turun Kad Cop Stamp Ahli Secara Live Dari Backend VPS / Supabase
+  async function fetchLiveLoyaltyStampCards(session){
+    if(!session || !session.phone){
+      stampCards = [];
+      renderStampSystem(null);
+      return;
+    }
+
+    let loaded = false;
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/stamps/cards?phone=${encodeURIComponent(session.phone)}`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && Array.isArray(data.cards)){
+          stampCards = data.cards;
+          if(data.targetStamps) loyaltyStampTarget = data.targetStamps;
+          if(data.member && data.member.stamps !== undefined){
+            session.stamps = data.member.stamps;
+            if(data.member.points !== undefined) session.points = data.member.points;
+            saveSession(session);
+          }
+          loaded = true;
+          renderStampSystem(session);
+        }
+      }
+    } catch(e){
+      console.warn('fetchLiveLoyaltyStampCards VPS offline:', e.message);
+    }
+
+    // Direct Supabase Fallback
+    if(!loaded && window.supabase && typeof window.supabase.from === 'function'){
+      try {
+        const cleanP = session.phone.replace(/[^0-9]/g, '');
+        const { data: mRow } = await window.supabase
+          .from('members')
+          .select('id, stamps, points')
+          .or(`phone.eq.${cleanP},phone.eq.60${cleanP.replace(/^0/, '')}`)
+          .maybeSingle();
+
+        if(mRow){
+          const { data: cRows } = await window.supabase
+            .from('member_stamp_cards')
+            .select('*')
+            .eq('member_id', mRow.id)
+            .order('card_number', { ascending: true });
+
+          if(cRows && cRows.length > 0){
+            stampCards = cRows.map(c => ({
+              id: c.id,
+              cardNumber: c.card_number,
+              title: `Kad Cop #${c.card_number}`,
+              stamps: c.stamps_collected,
+              targetStamps: c.target_stamps || loyaltyStampTarget,
+              status: c.status,
+              rewardName: c.reward_name || '1x Kopi Percuma',
+              completedDate: c.completed_at ? new Date(c.completed_at).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' }) : null,
+              claimedDate: c.claimed_at ? new Date(c.claimed_at).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' }) : null,
+              createdAt: c.created_at
+            }));
+          } else {
+            // Auto-create local card based on member stamps
+            stampCards = [{
+              id: 1,
+              cardNumber: 1,
+              title: 'Kad Cop #1',
+              stamps: mRow.stamps || 0,
+              targetStamps: loyaltyStampTarget,
+              status: (mRow.stamps || 0) >= loyaltyStampTarget ? 'unclaimed' : 'collecting',
+              rewardName: '1x Kopi Percuma',
+              completedDate: null,
+              claimedDate: null
+            }];
+          }
+          renderStampSystem(session);
+        }
+      } catch(err){
+        console.warn('fetchLiveLoyaltyStampCards Supabase direct error:', err);
+      }
+    }
+  }
+
+  // Realtime Supabase Subscription untuk jadual 'member_stamp_cards'
+  if(window.supabase && typeof window.supabase.channel === 'function'){
+    try {
+      window.supabase
+        .channel('loyalty_stamp_cards_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'member_stamp_cards' }, () => {
+          console.log('⚡ Perubahan kad cop stamp Supabase dikesan. Mengemas kini paparan...');
+          const s = getSavedSession();
+          if(s && s.phone) fetchLiveLoyaltyStampCards(s);
+        })
+        .subscribe();
+    } catch(e){}
+  }
+
+  function renderStampSystem(session){
+    if(!session || !session.phone){
+      // Keadaan Tetamu (Belum Log Masuk)
+      if(activeCardBadge) activeCardBadge.textContent = 'Kad Cop Stamp';
+      if(activeCardProgress) activeCardProgress.textContent = `0 / ${loyaltyStampTarget} Cop`;
+      if(stampFootText){
+        stampFootText.innerHTML = '<span style="color:var(--gold-bright); font-weight:600;">Log masuk untuk lihat Baki Mata Ganjaran / Cop Stamp →</span>';
+        stampFootText.onclick = () => openLoginPopup();
+      }
+      if(unclaimedBannerContainer) unclaimedBannerContainer.innerHTML = '';
+      if(historyTotalCount) historyTotalCount.textContent = '0 Kad';
+      if(historyBtnText) historyBtnText.textContent = 'Sejarah (0)';
+      if(historyCardList){
+        historyCardList.innerHTML = '<div style="text-align:center; padding:18px 0; color:var(--muted); font-size:12px;">Log masuk untuk lihat rekod kad cop stamp anda.</div>';
+      }
+
+      if(grid){
+        grid.innerHTML = '';
+        for(let i=0; i<loyaltyStampTarget; i++){
+          const d = document.createElement('div');
+          d.className = 'stamp empty';
+          d.innerHTML = beanSVG('#4a3c2c');
+          grid.appendChild(d);
+        }
+      }
+      return;
+    }
+
+    if(stampFootText) stampFootText.onclick = null;
+
+    // Keadaan Ahli (Telah Log Masuk)
+    let activeCard = stampCards.find(c => c.status === 'collecting');
+    if(!activeCard){
+      if(stampCards.length > 0){
+        activeCard = stampCards[stampCards.length - 1];
+      } else {
+        activeCard = {
+          id: 1,
+          cardNumber: 1,
+          title: 'Kad Cop #1',
+          stamps: session.stamps !== undefined ? session.stamps : 0,
+          targetStamps: loyaltyStampTarget,
+          status: 'collecting',
+          rewardName: '1x Kopi Percuma',
+          completedDate: null,
+          claimedDate: null
+        };
+      }
+    }
+
+    const targetCount = activeCard.targetStamps || loyaltyStampTarget || 10;
+    const currentStamps = activeCard.stamps || 0;
+
+    if(activeCardBadge) activeCardBadge.textContent = `Kad Semasa (${activeCard.title || 'Kad #' + (activeCard.cardNumber || 1)})`;
+    if(activeCardProgress) activeCardProgress.textContent = `${currentStamps} / ${targetCount} Cop`;
+    const remaining = Math.max(0, targetCount - currentStamps);
+    if(remaining > 0){
+      if(stampFootText) stampFootText.innerHTML = `Kumpul <b>${remaining} cop lagi</b> untuk ${activeCard.rewardName || '1 kopi percuma'}`;
+    } else {
+      if(stampFootText) stampFootText.innerHTML = `🎉 <b>Kad Penuh (${targetCount}/${targetCount})!</b> Sedia ditebus di kaunter.`;
+    }
+
+    if(grid){
+      grid.innerHTML = '';
+      for(let i=0; i<targetCount; i++){
+        const d = document.createElement('div');
+        let cls = 'stamp empty';
+        if(i < currentStamps) cls = 'stamp filled';
+        else if(i === currentStamps) cls = 'stamp next';
+        d.className = cls;
+        d.innerHTML = beanSVG(i < currentStamps ? '#3a2410' : '#4a3c2c');
+        grid.appendChild(d);
+      }
+    }
+
+    // Banner Kad Penuh Belum Ditebus
+    const unclaimedCards = stampCards.filter(c => c.status === 'unclaimed');
+    if(unclaimedCards.length > 0 && unclaimedBannerContainer){
+      const latestUnclaimed = unclaimedCards[0];
+      unclaimedBannerContainer.innerHTML = `
+        <div class="unclaimed-card-alert">
+          <div class="unclaimed-alert-info">
+            <h4 class="unclaimed-alert-title">
+              <span style="font-size:16px;">🎁</span>
+              ${latestUnclaimed.title || 'Kad #' + (latestUnclaimed.cardNumber || 1)} Penuh Sedia Ditebus!
+            </h4>
+            <p class="unclaimed-alert-desc">Ganjaran: <b>${latestUnclaimed.rewardName || '1x Kopi Percuma'}</b> • Tunjukkan skrin ini kepada staf POS di kaunter untuk tebus.</p>
+          </div>
+          <span class="history-status-tag unclaimed" style="flex-shrink:0;">Tebus di POS</span>
+        </div>
+      `;
+    } else if(unclaimedBannerContainer){
+      unclaimedBannerContainer.innerHTML = '';
+    }
+
+    // Panel Sejarah Kad
+    const totalCards = stampCards.length > 0 ? stampCards.length : 1;
+    if(historyTotalCount) historyTotalCount.textContent = `${totalCards} Kad Keseluruhan`;
+    if(historyBtnText) historyBtnText.textContent = `Sejarah (${totalCards})`;
+    if(historyCardList){
+      historyCardList.innerHTML = '';
+      const displayCards = stampCards.length > 0 ? stampCards : [activeCard];
+      const sortedCards = [...displayCards].reverse();
+
+      sortedCards.forEach(card => {
+        const item = document.createElement('div');
+        item.className = `history-card-item ${card.status === 'unclaimed' ? 'unclaimed-item' : ''}`;
+        const cardTarget = card.targetStamps || loyaltyStampTarget || 10;
+
+        let statusHtml = '';
+        if(card.status === 'collecting'){
+          statusHtml = `<span class="history-status-tag active">⚡ Sedang Mengumpul (${card.stamps}/${cardTarget})</span>`;
+        } else if(card.status === 'unclaimed'){
+          statusHtml = `<span class="history-status-tag unclaimed">🎁 Belum Tebus (Staf POS)</span>`;
+        } else if(card.status === 'claimed'){
+          statusHtml = `<span class="history-status-tag claimed">✓ Ditebus: ${card.rewardName || 'Ganjaran'}</span>`;
+        }
+
+        let subText = '';
+        if(card.status === 'collecting'){
+          const left = Math.max(0, cardTarget - card.stamps);
+          subText = `Aktif sekarang • ${left} cop lagi diperlukan`;
+        } else if(card.status === 'unclaimed'){
+          subText = `Penuh pada ${card.completedDate || 'Hari ini'} • Sedia ditebus di kaunter`;
+        } else if(card.status === 'claimed'){
+          subText = `Ditebus pada ${card.claimedDate || 'Selesai'}`;
+        }
+
+        item.innerHTML = `
+          <div class="history-item-left">
+            <p class="history-item-name">
+              ${card.title || 'Kad Cop #' + (card.cardNumber || 1)}
+              ${card.status === 'collecting' ? '<span style="font-size:10px; color:var(--gold-bright); font-weight:600;">(Semasa)</span>' : ''}
+            </p>
+            <p class="history-item-sub">${subText}</p>
+          </div>
+          ${statusHtml}
+        `;
+        historyCardList.appendChild(item);
+      });
+    }
+
+    if(typeof loadNotifications === 'function') loadNotifications();
+  }
+
+  // Buka / Tutup Panel Sejarah Kad
+  if(btnHistoryToggle){
+    btnHistoryToggle.addEventListener('click', ()=>{
+      const s = getSavedSession();
+      if(!s || !s.phone){
+        openLoginPopup();
+        return;
+      }
+      stampHistoryPanel.classList.toggle('show');
+    });
+  }
+
+  // Klik pada kad mata atau kad cop stamp untuk log masuk jika tetamu
+  const pointsCardEl = document.getElementById('pointsCard');
+  if(pointsCardEl){
+    pointsCardEl.addEventListener('click', ()=>{
+      const s = getSavedSession();
+      if(!s || !s.phone) openLoginPopup();
+    });
+  }
+
+  const activeStampCardEl = document.getElementById('activeStampCard');
+  if(activeStampCardEl){
+    activeStampCardEl.addEventListener('click', ()=>{
+      const s = getSavedSession();
+      if(!s || !s.phone) openLoginPopup();
+    });
+  }
+
+  // ---- REWARDS ENGINE (LIVE SUPABASE / BACKEND DRIVEN) ----
+  let liveRewards = [];
+  const list = document.getElementById('rewardList');
+  const toast = document.getElementById('toast');
+
+  async function fetchLiveLoyaltyRewards(){
+    let loaded = false;
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/rewards`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && Array.isArray(data.rewards)){
+          liveRewards = data.rewards;
+          const s = getSavedSession();
+          renderRewards(s);
+          loaded = true;
+        }
+      }
+    } catch(e){
+      console.warn('fetchLiveLoyaltyRewards VPS offline:', e.message);
+    }
+
+    if(!loaded && window.supabase && typeof window.supabase.from === 'function'){
+      try {
+        const { data, error } = await window.supabase
+          .from('rewards')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if(!error && data){
+          liveRewards = data.map(r => ({
+            id: r.id,
+            name: r.name,
+            type: (r.name || '').toLowerCase().includes('diskaun') ? 'discount' : 'item',
+            points: r.points_cost || 0,
+            cost: r.points_cost || 0,
+            limit: r.stock_limit || 0,
+            redeemed: r.redeemed_count || 0,
+            icon: r.icon || ((r.name || '').toLowerCase().includes('diskaun') ? '🏷️' : '☕'),
+            img: r.img_url || null,
+            expiry: r.expires_at || null,
+            isActive: r.is_active !== false
+          }));
+          const s = getSavedSession();
+          renderRewards(s);
+        }
+      } catch(err){
+        console.warn('fetchLiveLoyaltyRewards Supabase direct error:', err);
+      }
+    }
+  }
+
+  let loyaltyRewardSettings = { amountPerPoint: 1.00 };
+
+  async function fetchLiveLoyaltyRewardSettings(){
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/rewards/settings`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && data.settings){
+          loyaltyRewardSettings = data.settings;
+        }
+      }
+    } catch(e){}
+  }
+
+  // Realtime subscription untuk table 'rewards' di aplikasi kesetiaan pelanggan
+  if(window.supabase && typeof window.supabase.channel === 'function'){
+    try {
+      window.supabase
+        .channel('loyalty_rewards_realtime_channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'rewards' }, () => {
+          console.log('⚡ Perubahan katalog ganjaran dikesan. Mengemas kini paparan...');
+          fetchLiveLoyaltyRewards();
+        })
+        .subscribe();
+    } catch(e){}
+  }
+
+  function getRewardIconSvg(r){
+    if(r.img){
+      return `<img src="${r.img}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" alt="${r.name}">`;
+    }
+    if(r.type === 'discount'){
+      return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M7 3c0 1-1 1-1 2s1 1 1 2"/><path d="M11 3c0 1-1 1-1 2s1 1 1 2"/></svg>`;
+  }
+
+  function renderRewards(session){
+    if(!list) return;
+    list.innerHTML = '';
+
+    const isLoggedIn = Boolean(session && session.phone);
+    const currentPts = isLoggedIn ? (session.points || 0) : 0;
+
+    if(liveRewards.length === 0){
+      list.innerHTML = `
+        <div style="text-align:center; padding:32px 16px; background:var(--surface); border:1px dashed var(--hairline); border-radius:16px;">
+          <div style="font-size:30px; margin-bottom:6px;">🎁</div>
+          <div style="font-size:13.5px; font-weight:700; color:var(--cream); margin-bottom:2px;">Tiada Ganjaran Aktif</div>
+          <div style="font-size:11.5px; color:var(--muted);">Sila nantikan tawaran ganjaran terkini dari Koffi Coffee.</div>
+        </div>
+      `;
+      return;
+    }
+
+    liveRewards.forEach((r, idx)=>{
+      const cost = r.points || r.cost || 100;
+      const isExpired = r.expiry && new Date(r.expiry) < new Date();
+      const isEligible = isLoggedIn && (currentPts >= cost) && !isExpired;
+      
+      const card = document.createElement('div');
+      card.className = `reward-card ${isEligible ? 'eligible' : ''}`;
+      card.style.animationDelay = (0.1 + idx*0.08)+'s';
+      
+      let expiryTag = '';
+      if(r.expiry){
+        const d = new Date(r.expiry);
+        if(!isNaN(d.getTime())){
+          const months = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
+          expiryTag = `<span style="font-size:10.5px; color:${isExpired ? '#f87171' : 'var(--gold-bright)'}; font-weight:600; margin-left:6px;">· ${isExpired ? 'Luput' : 'Sah'}: ${d.getDate()} ${months[d.getMonth()]}</span>`;
+        }
+      }
+
+      let statusBadgeHtml = '';
+      if(isExpired){
+        statusBadgeHtml = '<span class="reward-status-badge locked" style="color:#f87171; border-color:rgba(248,113,113,0.3);">Luput</span>';
+      } else if(isEligible){
+        statusBadgeHtml = '<span class="reward-status-badge eligible">✓ Layak</span>';
+      } else if(isLoggedIn){
+        const needed = cost - currentPts;
+        statusBadgeHtml = `<span class="reward-status-badge locked">${needed} mata lagi</span>`;
+      } else {
+        statusBadgeHtml = `<span class="reward-status-badge locked">${cost} mata</span>`;
+      }
+
+      card.innerHTML = `
+        <div class="reward-icon">${getRewardIconSvg(r)}</div>
+        <div class="reward-info">
+          <p class="reward-name">${r.name}</p>
+          <span class="reward-cost ${isEligible?'ok':''}">${cost} mata ${expiryTag}</span>
+        </div>
+        ${statusBadgeHtml}
+      `;
+
+      list.appendChild(card);
+    });
+  }
+
+  // ---- REWARD GUIDE MODAL HANDLERS ----
+  const btnRewardGuide = document.getElementById('btnRewardGuide');
+  const rewardGuideModal = document.getElementById('rewardGuideModal');
+  const rewardGuideCloseBtn = document.getElementById('rewardGuideCloseBtn');
+  const rewardGuideOkBtn = document.getElementById('rewardGuideOkBtn');
+
+  function openRewardGuideModal(){
+    if(!rewardGuideModal) return;
+    rewardGuideModal.classList.add('show');
+    lockScroll();
+  }
+
+  function closeRewardGuideModal(){
+    if(!rewardGuideModal) return;
+    rewardGuideModal.classList.remove('show');
+    unlockScroll();
+  }
+
+  if(btnRewardGuide){
+    btnRewardGuide.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openRewardGuideModal();
+    });
+  }
+  if(rewardGuideCloseBtn){
+    rewardGuideCloseBtn.addEventListener('click', closeRewardGuideModal);
+  }
+  if(rewardGuideOkBtn){
+    rewardGuideOkBtn.addEventListener('click', closeRewardGuideModal);
+  }
+  if(rewardGuideModal){
+    rewardGuideModal.addEventListener('click', (e)=>{
+      if(e.target === rewardGuideModal) closeRewardGuideModal();
+    });
+  }
+
+  // ---- SISTEM CABUTAN BERTUAH (5-PETAK PIN, HADIAH CAROUSEL & NOTIS LIVE) ----
+  const luckyPinBoxes = document.querySelectorAll('.lucky-pin-box');
+  const luckySubmit   = document.getElementById('luckySubmit');
+  const luckyForm     = document.getElementById('luckyForm');
+  const luckyWin      = document.getElementById('luckyWin');
+  const luckyPrizeName = document.getElementById('luckyPrizeName');
+  const luckyWinCode  = document.getElementById('luckyWinCode');
+  const btnLuckyEnterAgain = document.getElementById('btnLuckyEnterAgain');
+  const btnLuckyGuide = document.getElementById('btnLuckyGuide');
+  const luckyGuideModal = document.getElementById('luckyGuideModal');
+  const btnCloseLuckyGuide = document.getElementById('btnCloseLuckyGuide');
+  const btnCloseLuckyGuideX = document.getElementById('btnCloseLuckyGuideX');
+
+  // Modal 1: Panduan Tebus Hadiah (1 Langkah Ringkas)
+  function openLuckyGuideModal(){
+    if(!luckyGuideModal) return;
+    luckyGuideModal.classList.add('show');
+    lockScroll();
+  }
+
+  function closeLuckyGuideModal(){
+    if(!luckyGuideModal) return;
+    luckyGuideModal.classList.remove('show');
+    unlockScroll();
+  }
+
+  if(btnLuckyGuide) btnLuckyGuide.addEventListener('click', (e)=>{ e.stopPropagation(); openLuckyGuideModal(); });
+  if(btnCloseLuckyGuide) btnCloseLuckyGuide.addEventListener('click', closeLuckyGuideModal);
+  if(btnCloseLuckyGuideX) btnCloseLuckyGuideX.addEventListener('click', closeLuckyGuideModal);
+  if(luckyGuideModal) luckyGuideModal.addEventListener('click', (e)=>{
+    if(e.target === luckyGuideModal) closeLuckyGuideModal();
+  });
+
+  // Modal 2: Popup Senarai Hadiah Cabutan Bertuah (Sliding Carousel)
+  const btnLuckyPrizesShow = document.getElementById('btnLuckyPrizesShow');
+  const luckyPrizesModal = document.getElementById('luckyPrizesModal');
+  const btnCloseLuckyPrizes = document.getElementById('btnCloseLuckyPrizes');
+  const btnLuckyPrizesOk = document.getElementById('btnLuckyPrizesOk');
+  const luckyPrizesTrack = document.getElementById('luckyPrizesTrack');
+  const luckyPrizesSliderWrap = document.getElementById('luckyPrizesSliderWrap');
+  const btnLuckyPrevSlide = document.getElementById('btnLuckyPrevSlide');
+  const btnLuckyNextSlide = document.getElementById('btnLuckyNextSlide');
+  const luckyPrizesDots = document.getElementById('luckyPrizesDots');
+
+  let currentLuckyGiftsList = [];
+  let currentGiftSlideIndex = 0;
+
+  function openLuckyPrizesModal(){
+    if(!luckyPrizesModal) return;
+    luckyPrizesModal.classList.add('show');
+    lockScroll();
+    fetchLiveLuckyGiftsLoyalty();
+  }
+
+  function closeLuckyPrizesModal(){
+    if(!luckyPrizesModal) return;
+    luckyPrizesModal.classList.remove('show');
+    unlockScroll();
+  }
+
+  if(btnLuckyPrizesShow) btnLuckyPrizesShow.addEventListener('click', (e)=>{ e.stopPropagation(); openLuckyPrizesModal(); });
+  if(btnCloseLuckyPrizes) btnCloseLuckyPrizes.addEventListener('click', closeLuckyPrizesModal);
+  if(btnLuckyPrizesOk) btnLuckyPrizesOk.addEventListener('click', closeLuckyPrizesModal);
+  if(luckyPrizesModal) luckyPrizesModal.addEventListener('click', (e)=>{
+    if(e.target === luckyPrizesModal) closeLuckyPrizesModal();
+  });
+
+  async function fetchLiveLuckyGiftsLoyalty(){
+    const VPS_BACKEND_URL = window.VPS_BACKEND_URL || (
+      (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http'))
+        ? `${window.location.protocol}//${window.location.hostname}:3000`
+        : 'http://localhost:3000'
+    );
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/lucky-draw/gifts`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && Array.isArray(data.gifts) && data.gifts.length > 0){
+          currentLuckyGiftsList = data.gifts;
+        }
+      }
+    } catch(e){
+      console.warn('Backend gifts fetch failed:', e.message);
+    }
+
+    renderLuckyPrizesSlider(currentLuckyGiftsList);
+  }
+
+  function renderLuckyPrizesSlider(gifts){
+    if(!luckyPrizesTrack) return;
+    currentGiftSlideIndex = 0;
+    luckyPrizesTrack.innerHTML = '';
+    if(luckyPrizesDots) luckyPrizesDots.innerHTML = '';
+
+    if(!gifts || gifts.length === 0){
+      luckyPrizesTrack.innerHTML = `
+        <div style="width:100%; flex-shrink:0; padding:36px 16px; text-align:center;">
+          <div style="font-size:36px; margin-bottom:8px;">🎁</div>
+          <div style="font-size:14px; font-weight:700; color:var(--cream); margin-bottom:4px;">Hadiah Sedang Diselaraskan</div>
+          <div style="font-size:11.5px; color:var(--muted);">Senarai hadiah terkini akan dimuatkan dari kaunter. Nantikan!</div>
+        </div>
+      `;
+      if(btnLuckyPrevSlide) btnLuckyPrevSlide.style.display = 'none';
+      if(btnLuckyNextSlide) btnLuckyNextSlide.style.display = 'none';
+      return;
+    }
+
+    const VPS_BACKEND_URL = window.VPS_BACKEND_URL || (
+      (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http'))
+        ? `${window.location.protocol}//${window.location.hostname}:3000`
+        : 'http://localhost:3000'
+    );
+
+    gifts.forEach((g, idx) => {
+      const slide = document.createElement('div');
+      slide.style.cssText = 'width:100%; flex-shrink:0; display:flex; flex-direction:column; align-items:center; box-sizing:border-box;';
+
+      let mediaHtml = '';
+      let imgSrc = g.img;
+      if(imgSrc && typeof imgSrc === 'string' && imgSrc.startsWith('/uploads/')){
+        imgSrc = `${VPS_BACKEND_URL}${imgSrc}`;
+      }
+
+      if(imgSrc){
+        mediaHtml = `
+          <div style="width:100%; height:185px; overflow:hidden; border-radius:14px 14px 0 0; background:#120c07; display:flex; align-items:center; justify-content:center; position:relative;">
+            <img src="${imgSrc}" alt="${escapeHtml(g.name || 'Hadiah')}" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\\'font-size:48px; padding:30px 0; text-align:center;\\\'>🎁</div>';">
+          </div>
+        `;
+      } else {
+        const emoji = g.type === 'menu' ? '☕' : '🎁';
+        mediaHtml = `
+          <div style="width:100%; height:160px; border-radius:14px 14px 0 0; background:linear-gradient(135deg, rgba(205,163,106,0.15), rgba(208,114,63,0.18)); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;">
+            <span style="font-size:48px;">${emoji}</span>
+            <span style="font-size:11px; font-weight:700; color:var(--gold-bright); text-transform:uppercase; letter-spacing:0.5px;">${g.type === 'menu' ? 'Menu Pilihan Koffi' : 'Hadiah Istimewa'}</span>
+          </div>
+        `;
+      }
+
+      const statusBadge = g.status === 'claimed'
+        ? '<span style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(239,68,68,0.18); color:#f87171; border:1px solid rgba(239,68,68,0.3);">Telah Ditebus</span>'
+        : (g.status === 'won'
+            ? '<span style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(234,179,8,0.18); color:#facc15; border:1px solid rgba(234,179,8,0.3);">Dimenangi (Belum Tuntut)</span>'
+            : '<span style="font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; background:rgba(34,197,94,0.18); color:#4ade80; border:1px solid rgba(34,197,94,0.3);">Sedia Dimenangi ✨</span>');
+
+      slide.innerHTML = `
+        ${mediaHtml}
+        <div style="padding:14px 16px; width:100%; text-align:center; box-sizing:border-box;">
+          <div style="margin-bottom:6px;">${statusBadge}</div>
+          <h4 style="font-family:'Fraunces',serif; font-size:17px; font-weight:700; color:var(--cream); margin:0 0 4px;">${escapeHtml(g.name || 'Hadiah Bertuah')}</h4>
+          <p style="font-size:11.5px; color:var(--cream-dim); margin:0; line-height:1.4;">
+            ${g.type === 'menu' ? 'Penebusan item menu istimewa di kaunter' : 'Barangan eksklusif cabutan bertuah Koffi'}
+          </p>
+        </div>
+      `;
+      luckyPrizesTrack.appendChild(slide);
+
+      // Dot Indicator
+      if(gifts.length > 1 && luckyPrizesDots){
+        const dot = document.createElement('span');
+        dot.style.cssText = `width:7px; height:7px; border-radius:50%; background:${idx === 0 ? 'var(--gold-bright)' : 'rgba(255,255,255,0.25)'}; transition:all .2s ease; cursor:pointer;`;
+        dot.addEventListener('click', ()=> goToGiftSlide(idx));
+        luckyPrizesDots.appendChild(dot);
+      }
+    });
+
+    if(gifts.length > 1){
+      if(btnLuckyPrevSlide) btnLuckyPrevSlide.style.display = 'flex';
+      if(btnLuckyNextSlide) btnLuckyNextSlide.style.display = 'flex';
+    } else {
+      if(btnLuckyPrevSlide) btnLuckyPrevSlide.style.display = 'none';
+      if(btnLuckyNextSlide) btnLuckyNextSlide.style.display = 'none';
+    }
+
+    updateGiftSlidePosition();
+  }
+
+  function goToGiftSlide(idx){
+    const total = currentLuckyGiftsList.length;
+    if(total <= 1) return;
+    currentGiftSlideIndex = (idx + total) % total;
+    updateGiftSlidePosition();
+  }
+
+  function updateGiftSlidePosition(){
+    if(!luckyPrizesTrack) return;
+    luckyPrizesTrack.style.transform = `translateX(-${currentGiftSlideIndex * 100}%)`;
+    if(luckyPrizesDots){
+      const dots = luckyPrizesDots.querySelectorAll('span');
+      dots.forEach((d, i) => {
+        d.style.background = (i === currentGiftSlideIndex) ? 'var(--gold-bright)' : 'rgba(255,255,255,0.25)';
+        d.style.transform = (i === currentGiftSlideIndex) ? 'scale(1.3)' : 'scale(1)';
+      });
+    }
+  }
+
+  if(btnLuckyPrevSlide) btnLuckyPrevSlide.addEventListener('click', ()=> goToGiftSlide(currentGiftSlideIndex - 1));
+  if(btnLuckyNextSlide) btnLuckyNextSlide.addEventListener('click', ()=> goToGiftSlide(currentGiftSlideIndex + 1));
+
+  // Touch Swipe Support untuk Carousel Hadiah
+  let touchStartX = 0;
+  let touchEndX = 0;
+  if(luckyPrizesSliderWrap){
+    luckyPrizesSliderWrap.addEventListener('touchstart', (e)=>{
+      touchStartX = e.changedTouches[0].screenX;
+    }, {passive:true});
+
+    luckyPrizesSliderWrap.addEventListener('touchend', (e)=>{
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if(diff > 40){
+        goToGiftSlide(currentGiftSlideIndex + 1);
+      } else if(diff < -40){
+        goToGiftSlide(currentGiftSlideIndex - 1);
+      }
+    }, {passive:true});
+  }
+
+  // ---- NOTIS UPDATE PEMENANG (DIMUATKAN DALAM NOTIFIKASI APP) ----
+  let activeWinnersList = [];
+
+  async function fetchLiveLuckyWinners(){
+    const VPS_BACKEND_URL = window.VPS_BACKEND_URL || 'http://localhost:3000';
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/lucky-draw/winners`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && Array.isArray(data.winners)){
+          activeWinnersList = data.winners;
+          if(typeof loadNotifications === 'function') loadNotifications();
+        }
+      }
+    } catch(e){
+      console.warn('Fallback winners fetch:', e.message);
+    }
+  }
+
+  // 5-Petak PIN Interaction: Auto Focus Next / Backspace / Paste
+  luckyPinBoxes.forEach((box, idx) => {
+    box.addEventListener('focus', () => {
+      const s = getSavedSession();
+      if(!s || !s.phone){
+        openLoginPopup();
+        return;
+      }
+      box.style.borderColor = 'var(--gold-bright)';
+      box.style.transform = 'scale(1.05)';
+    });
+
+    box.addEventListener('blur', () => {
+      box.style.borderColor = 'var(--hairline)';
+      box.style.transform = 'none';
+    });
+
+    box.addEventListener('input', () => {
+      const val = box.value;
+      if(val.length > 0){
+        if(idx < luckyPinBoxes.length - 1){
+          luckyPinBoxes[idx + 1].focus();
+        }
+      }
+      checkLuckyReady();
+    });
+
+    box.addEventListener('keydown', (e) => {
+      if(e.key === 'Backspace'){
+        if(box.value.length === 0 && idx > 0){
+          luckyPinBoxes[idx - 1].focus();
+          luckyPinBoxes[idx - 1].value = '';
+        }
+      }
+    });
+
+    // Paste handler for 5-char code
+    box.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+      if(pasteData){
+        const chars = pasteData.slice(0, 5).split('');
+        chars.forEach((ch, cIdx) => {
+          if(luckyPinBoxes[cIdx]) luckyPinBoxes[cIdx].value = ch;
+        });
+        const lastIdx = Math.min(chars.length, luckyPinBoxes.length) - 1;
+        if(lastIdx >= 0 && luckyPinBoxes[lastIdx]) luckyPinBoxes[lastIdx].focus();
+        checkLuckyReady();
+      }
+    });
+  });
+
+  function getEnteredLuckyCode(){
+    return Array.from(luckyPinBoxes).map(b => b.value.trim()).join('');
+  }
+
+  function checkLuckyReady(){
+    const code = getEnteredLuckyCode();
+    if(luckySubmit){
+      luckySubmit.classList.toggle('ready', code.length === 5);
+      luckySubmit.style.opacity = code.length === 5 ? '1' : '0.7';
+    }
+  }
+
+  if(btnLuckyEnterAgain){
+    btnLuckyEnterAgain.addEventListener('click', () => {
+      luckyWin.hidden = true;
+      luckyForm.hidden = false;
+      luckyForm.style.opacity = '1';
+      luckyPinBoxes.forEach(b => b.value = '');
+      if(luckyPinBoxes[0]) luckyPinBoxes[0].focus();
+      checkLuckyReady();
+    });
+  }
+
+  function checkLuckyLockout(){
+    try {
+      const lockUntil = parseInt(localStorage.getItem('arang_lucky_lockout_until'), 10) || 0;
+      const now = Date.now();
+      if(lockUntil > now){
+        const remainingMs = lockUntil - now;
+        const remainingHours = Math.floor(remainingMs / (3600 * 1000));
+        const remainingMins = Math.ceil((remainingMs % (3600 * 1000)) / (60 * 1000));
+        if(luckySubmit){
+          luckySubmit.disabled = true;
+          luckySubmit.textContent = `Disekat (${remainingHours}j ${remainingMins}m)`;
+          luckySubmit.style.opacity = '0.6';
+          luckySubmit.style.cursor = 'not-allowed';
+        }
+        return { isLocked: true, remainingHours, remainingMins };
+      } else if(lockUntil > 0){
+        localStorage.removeItem('arang_lucky_lockout_until');
+        if(luckySubmit){
+          luckySubmit.disabled = false;
+          luckySubmit.textContent = 'Sertai Cabutan';
+          luckySubmit.style.opacity = '1';
+          luckySubmit.style.cursor = '';
+        }
+      }
+    } catch(e){}
+    return { isLocked: false };
+  }
+
+  // Periksa lockout semasa aplikasi dimuatkan
+  checkLuckyLockout();
+
+  // ---- POPUP MODAL MAKLUM BALAS KOD CABUTAN BERTUAH ----
+  const luckyStatusModal = document.getElementById('luckyStatusModal');
+  const btnCloseLuckyStatusX = document.getElementById('btnCloseLuckyStatusX');
+  const btnLuckyStatusAction = document.getElementById('btnLuckyStatusAction');
+
+  function openLuckyStatusModal(config){
+    if(!luckyStatusModal) return;
+    const iconWrap = document.getElementById('luckyStatusIconWrap');
+    const iconSpan = document.getElementById('luckyStatusIcon');
+    const titleEl = document.getElementById('luckyStatusTitle');
+    const codeBadge = document.getElementById('luckyStatusCodeBadge');
+    const msgEl = document.getElementById('luckyStatusMessage');
+    const attemptBox = document.getElementById('luckyStatusAttemptBox');
+    const attemptCount = document.getElementById('luckyStatusAttemptCount');
+    const actionBtn = document.getElementById('btnLuckyStatusAction');
+
+    if(config.code){
+      codeBadge.style.display = 'inline-block';
+      codeBadge.textContent = `KOD: ${config.code.toUpperCase()}`;
+    } else {
+      codeBadge.style.display = 'none';
+    }
+
+    if(config.type === 'no_prize'){
+      // A. Pop-up Bukan Pemenang / Tiada Hadiah (Kod Sah)
+      iconWrap.style.background = 'rgba(205,163,106,0.18)';
+      iconWrap.style.border = '1.5px solid var(--gold)';
+      iconWrap.style.color = 'var(--gold-bright)';
+      iconSpan.textContent = '🎁';
+      titleEl.textContent = config.title || 'Tiada Hadiah Dimenangi';
+      titleEl.style.color = 'var(--cream)';
+      msgEl.textContent = config.message || 'Kod anda adalah sah, namun tiada ganjaran untuk pusingan ini. Terima kasih atas penyertaan anda! Sila cuba lagi pada resit seterusnya.';
+      attemptBox.style.display = 'none';
+      actionBtn.textContent = config.actionText || 'Cuba Lagi';
+      actionBtn.style.background = 'linear-gradient(135deg, var(--gold), var(--gold-bright))';
+      actionBtn.style.color = '#1a1006';
+    } else if(config.type === 'invalid'){
+      // B. Pop-up Kod Tidak Sah / Tidak Wujud
+      iconWrap.style.background = 'rgba(239,68,68,0.15)';
+      iconWrap.style.border = '1.5px solid rgba(239,68,68,0.4)';
+      iconWrap.style.color = '#f87171';
+      iconSpan.textContent = '⚠️';
+      titleEl.textContent = config.title || 'Kod Tidak Sah';
+      titleEl.style.color = '#fca5a5';
+      msgEl.textContent = config.message || 'Kod yang dimasukkan tidak dijumpai, salah, atau belum diaktifkan pada resit pesanan POS.';
+      
+      if(config.remainingAttempts !== undefined || config.failedCount !== undefined){
+        const failed = config.failedCount || (5 - (config.remainingAttempts || 4));
+        const left = config.remainingAttempts !== undefined ? config.remainingAttempts : (5 - failed);
+        attemptBox.style.display = 'block';
+        attemptBox.innerHTML = `⚠️ Percubaan gagal: <b>${Math.min(5, Math.max(1, failed))}/5</b>. (Baki percubaan: ${left} kali sebelum sesi dihadkan).`;
+      } else {
+        attemptBox.style.display = 'none';
+      }
+
+      actionBtn.textContent = config.actionText || 'Semak Semula';
+      actionBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+      actionBtn.style.color = '#fff';
+    } else if(config.type === 'used'){
+      // C. Pop-up Kod Sudah Digunakan
+      iconWrap.style.background = 'rgba(59,130,246,0.15)';
+      iconWrap.style.border = '1.5px solid rgba(59,130,246,0.4)';
+      iconWrap.style.color = '#60a5fa';
+      iconSpan.textContent = 'ℹ️';
+      titleEl.textContent = config.title || 'Kod Telah Digunakan';
+      titleEl.style.color = '#93c5fd';
+      msgEl.textContent = config.message || 'Kod bertuah ini telah ditebus atau digunakan sebelum ini.';
+      attemptBox.style.display = 'none';
+      actionBtn.textContent = config.actionText || 'Tutup';
+      actionBtn.style.background = 'linear-gradient(135deg, var(--gold), var(--gold-bright))';
+      actionBtn.style.color = '#1a1006';
+    } else if(config.type === 'locked'){
+      // D. Pop-up Akaun Disekat
+      iconWrap.style.background = 'rgba(239,68,68,0.2)';
+      iconWrap.style.border = '1.5px solid #ef4444';
+      iconWrap.style.color = '#f87171';
+      iconSpan.textContent = '🔒';
+      titleEl.textContent = config.title || 'Akaun Disekat Sementara';
+      titleEl.style.color = '#f87171';
+      msgEl.textContent = config.message || 'Akaun anda disekat selama 24 jam kerana 5 kali percubaan kod yang tidak sah. Sila cuba lagi kemudian.';
+      attemptBox.style.display = 'none';
+      actionBtn.textContent = config.actionText || 'Faham & Tutup';
+      actionBtn.style.background = 'linear-gradient(135deg, #4b5563, #374151)';
+      actionBtn.style.color = '#fff';
+    }
+
+    luckyStatusModal.classList.add('show');
+    lockScroll();
+  }
+
+  function closeLuckyStatusModal(){
+    if(!luckyStatusModal) return;
+    luckyStatusModal.classList.remove('show');
+    unlockScroll();
+
+    luckyPinBoxes.forEach(b => b.value = '');
+    if(luckyPinBoxes[0]) setTimeout(() => luckyPinBoxes[0].focus(), 150);
+    checkLuckyReady();
+  }
+
+  if(btnCloseLuckyStatusX) btnCloseLuckyStatusX.addEventListener('click', closeLuckyStatusModal);
+  if(btnLuckyStatusAction) btnLuckyStatusAction.addEventListener('click', closeLuckyStatusModal);
+  if(luckyStatusModal) luckyStatusModal.addEventListener('click', (e)=>{
+    if(e.target === luckyStatusModal) closeLuckyStatusModal();
+  });
+
+  if(luckySubmit){
+    luckySubmit.addEventListener('click', async () => {
+      const s = getSavedSession();
+      if(!s || !s.phone){
+        showToast('Sila log masuk nombor WhatsApp anda terlebih dahulu.');
+        setTimeout(() => openLoginPopup(), 200);
+        return;
+      }
+
+      const lockStatus = checkLuckyLockout();
+      if(lockStatus.isLocked){
+        openLuckyStatusModal({
+          type: 'locked',
+          title: 'Akaun Disekat Sementara',
+          message: `Akaun disekat sementara kerana 5 kali percubaan kod tidak sah. Sila cuba lagi dalam ${lockStatus.remainingHours} jam ${lockStatus.remainingMins} minit.`,
+          actionText: 'Faham & Tutup'
+        });
+        return;
+      }
+
+      const code = getEnteredLuckyCode();
+      if(!code || code.length < 5){
+        showToast('Sila lengkapkan 5 aksara kod bertuah');
+        return;
+      }
+
+      luckySubmit.disabled = true;
+      luckySubmit.textContent = 'Menyemak kod...';
+
+      try {
+        const VPS_BACKEND_URL = window.VPS_BACKEND_URL || (
+          (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http'))
+            ? window.location.origin
+            : 'http://localhost:3000'
+        );
+        const headers = { 'Content-Type': 'application/json' };
+        if(s && s.token){
+          headers['Authorization'] = `Bearer ${s.token}`;
+        }
+        const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/lucky-draw/enter`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            code: code,
+            phone: s.phone,
+            name: s.name || `Ahli ${s.phone.slice(-4)}`
+          })
+        });
+        const data = await res.json();
+
+        if(!res.ok || !data.success){
+          if(data.isLocked && data.lockoutExpiresAt){
+            try { localStorage.setItem('arang_lucky_lockout_until', String(data.lockoutExpiresAt)); } catch(e){}
+            checkLuckyLockout();
+            openLuckyStatusModal({
+              type: 'locked',
+              title: 'Akaun Disekat Sementara',
+              message: data.error || 'Akaun anda disekat selama 24 jam kerana 5 kali percubaan kod yang tidak sah.',
+              code: code,
+              actionText: 'Faham & Tutup'
+            });
+            return;
+          }
+
+          const errMsg = data.error || '';
+          if(data.isAlreadyUsed || errMsg.toLowerCase().includes('ditebus') || errMsg.toLowerCase().includes('digunakan')){
+            openLuckyStatusModal({
+              type: 'used',
+              title: 'Kod Telah Digunakan',
+              message: errMsg || 'Kod bertuah ini telah ditebus atau digunakan sebelum ini.',
+              code: code,
+              actionText: 'Tutup'
+            });
+          } else {
+            openLuckyStatusModal({
+              type: 'invalid',
+              title: 'Kod Tidak Sah',
+              message: errMsg || 'Kod yang dimasukkan tidak dijumpai, salah, atau belum diaktifkan pada resit pesanan POS.',
+              code: code,
+              remainingAttempts: data.remainingAttempts,
+              failedCount: data.failedCount,
+              actionText: 'Semak Semula'
+            });
+          }
+          return;
+        }
+
+        // Jika tebusan berjaya, bersihkan sebarang sekatan
+        try { localStorage.removeItem('arang_lucky_lockout_until'); } catch(e){}
+
+        if(data.isWinner){
+          // Tunjuk skrin kemenangan
+          luckyForm.style.opacity = '0';
+          setTimeout(() => {
+            luckyForm.hidden = true;
+            if(luckyPrizeName) luckyPrizeName.textContent = data.gift ? data.gift.name : 'Hadiah Istimewa Koffi';
+            if(luckyWinCode) luckyWinCode.textContent = `Kod: ${code.toUpperCase()}`;
+            luckyWin.hidden = false;
+            luckyWin.style.opacity = '0';
+            requestAnimationFrame(() => { luckyWin.style.opacity = '1'; });
+            fetchLiveLuckyWinners(); // Segarkan senarai pemenang
+          }, 200);
+        } else {
+          // A. Pop-up Bukan Pemenang / Tiada Hadiah (Kod Sah)
+          openLuckyStatusModal({
+            type: 'no_prize',
+            title: 'Tiada Hadiah Dimenangi',
+            message: 'Kod anda adalah sah, namun tiada ganjaran untuk pusingan ini. Terima kasih atas penyertaan anda! Sila cuba lagi pada resit seterusnya.',
+            code: code,
+            actionText: 'Cuba Lagi'
+          });
+        }
+      } catch(err){
+        console.error('Lucky draw enter error:', err);
+        showToast('Gagal menyemak kod. Sila periksa sambungan internet anda.');
+      } finally {
+        luckySubmit.disabled = false;
+        luckySubmit.textContent = 'Sertai Cabutan';
+        checkLuckyLockout();
+      }
+    });
+  }
+
+  // Muat turun data pemenang dan hadiah awal
+  try { fetchLiveLuckyWinners(); } catch(e){}
+  try { fetchLiveLuckyGiftsLoyalty(); } catch(e){}
+
+  // ---- POPUP LOGIN LOGIC ----
+  const loginModal = document.getElementById('loginModal');
+  const loginCloseBtn = document.getElementById('loginCloseBtn');
+  const authStatusBtn = document.getElementById('authStatusBtn');
+  const loginPhoneInput = document.getElementById('loginPhoneInput');
+  const btnWaOtp = document.getElementById('btnWaOtp');
+  const btnWaOtpText = document.getElementById('btnWaOtpText');
+  const otpSentBanner = document.getElementById('otpSentBanner');
+  const demoOtpDisplay = document.getElementById('demoOtpDisplay');
+  const otpTimerContainer = document.getElementById('otpTimerContainer');
+  const otpTimerText = document.getElementById('otpTimerText');
+  const btnVerifyOtp = document.getElementById('btnVerifyOtp');
+  const otpDigitsRow = document.getElementById('otpDigitsRow');
+  const otpAttemptBadge = document.getElementById('otpAttemptBadge');
+  const attemptCount = document.getElementById('attemptCount');
+  const otpLockoutBanner = document.getElementById('otpLockoutBanner');
+  const lockoutTimerText = document.getElementById('lockoutTimerText');
+  const otpBoxes = [
+    document.getElementById('otp1'),
+    document.getElementById('otp2'),
+    document.getElementById('otp3'),
+    document.getElementById('otp4')
+  ];
+
+  // ---- Attempt Tracking & 1-Hour Lockout (5 Percubaan Maksimum) ----
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_DURATION = 60 * 60 * 1000; // 1 jam = 3,600,000 milisaat
+
+  let failedAttempts = parseInt(localStorage.getItem('arang_otp_failed_attempts') || '0', 10);
+  let lockoutUntil = parseInt(localStorage.getItem('arang_otp_lockout_until') || '0', 10);
+  let lockoutTimerInterval = null;
+
+  function checkLockoutState(){
+    const now = Date.now();
+    if(lockoutUntil > now){
+      applyLockoutUI(lockoutUntil - now);
+      return true;
+    } else {
+      if(lockoutUntil !== 0){
+        resetLockout();
+      }
+      return false;
+    }
+  }
+
+  function applyLockoutUI(remainingMs){
+    clearInterval(lockoutTimerInterval);
+    otpLockoutBanner.style.display = 'block';
+    otpAttemptBadge.style.display = 'none';
+
+    // Kunci semua input OTP & butang tindakan
+    otpBoxes.forEach(b => { b.disabled = true; b.value = ''; });
+    btnVerifyOtp.disabled = true;
+    btnWaOtp.disabled = true;
+
+    function updateLockoutTimer(){
+      const remainingSecs = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+      if(remainingSecs <= 0){
+        clearInterval(lockoutTimerInterval);
+        resetLockout();
+        toast.textContent = 'Tempoh sekatan 1 jam tamat. Anda boleh cuba semula.';
+        toast.classList.add('show');
+        setTimeout(()=> toast.classList.remove('show'), 2600);
+      } else {
+        const mins = Math.floor(remainingSecs / 60);
+        const secs = remainingSecs % 60;
+        lockoutTimerText.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+      }
+    }
+    updateLockoutTimer();
+    lockoutTimerInterval = setInterval(updateLockoutTimer, 1000);
+  }
+
+  function triggerLockout(){
+    lockoutUntil = Date.now() + LOCKOUT_DURATION;
+    localStorage.setItem('arang_otp_lockout_until', String(lockoutUntil));
+    localStorage.setItem('arang_otp_failed_attempts', String(MAX_ATTEMPTS));
+    applyLockoutUI(LOCKOUT_DURATION);
+
+    toast.textContent = 'Akaun disekat 1 jam kerana 5 kali salah pin!';
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 3500);
+  }
+
+  function resetLockout(){
+    clearInterval(lockoutTimerInterval);
+    failedAttempts = 0;
+    lockoutUntil = 0;
+    localStorage.removeItem('arang_otp_failed_attempts');
+    localStorage.removeItem('arang_otp_lockout_until');
+
+    otpLockoutBanner.style.display = 'none';
+    otpAttemptBadge.style.display = 'none';
+    otpBoxes.forEach(b => { b.disabled = false; b.value = ''; });
+    btnVerifyOtp.disabled = false;
+    btnWaOtp.disabled = false;
+  }
+
+  function updateAttemptBadge(){
+    if(failedAttempts > 0 && failedAttempts < MAX_ATTEMPTS){
+      const remaining = MAX_ATTEMPTS - failedAttempts;
+      attemptCount.textContent = remaining;
+      otpAttemptBadge.style.display = 'block';
+    } else {
+      otpAttemptBadge.style.display = 'none';
+    }
+  }
+
+  // ---- LIVE SUPABASE PROMOTIONS & POPUP ----
+  const promoModal = document.getElementById('promoModal');
+  const promoCloseBtn = document.getElementById('promoCloseBtn');
+  const btnClaimPromo = document.getElementById('btnClaimPromo');
+  const btnDismissPromo = document.getElementById('btnDismissPromo');
+
+  // Promo Auto Countdown Elements (5s Countdown On Refresh / Entry)
+  const promoAutoCountdownToast = document.getElementById('promoAutoCountdownToast');
+  const promoCountdownBar = document.getElementById('promoCountdownBar');
+  const promoCountdownSec = document.getElementById('promoCountdownSec');
+  const btnQuickOpenPromo = document.getElementById('btnQuickOpenPromo');
+  const btnQuickDismissPromo = document.getElementById('btnQuickDismissPromo');
+
+  let promoCountdownTimer = null;
+  let promoCountdownSeconds = 5;
+  let isPromoPopupTriggered = false;
+
+  function renderLivePromoUI(promo){
+    if(!promo) return;
+    const promoBadgeTag = document.getElementById('promoBadgeTag');
+    const promoMediaBox = document.getElementById('promoMediaBox');
+    const promoTitleText = document.getElementById('promoTitleText');
+    const promoDescText = document.getElementById('promoDescText');
+    const btnClaimPromo = document.getElementById('btnClaimPromo');
+
+    if(promoBadgeTag) promoBadgeTag.textContent = promo.badge_label || promo.badge || '🔥 Tawaran Khas';
+    if(promoTitleText) promoTitleText.textContent = promo.title || 'Tawaran Khas Koffi';
+    if(promoDescText) promoDescText.textContent = promo.description || '';
+    if(btnClaimPromo && promo.action_label) btnClaimPromo.textContent = promo.action_label;
+
+    const mediaSrc = resolveMediaUrl(promo.media_url || promo.src || '');
+
+    if(promoMediaBox){
+      if(promo.media_type === 'video'){
+        promoMediaBox.innerHTML = `<video src="${mediaSrc}" autoplay muted playsinline controls style="width:100%;height:auto;max-height:min(440px,52vh);object-fit:contain;border-radius:14px;display:block;"></video>`;
+      } else if(mediaSrc){
+        promoMediaBox.innerHTML = `<img src="${mediaSrc}" alt="${promo.title || 'Promosi'}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80';" style="width:100%;height:auto;max-height:min(440px,52vh);object-fit:contain;border-radius:14px;display:block;">`;
+      } else {
+        promoMediaBox.innerHTML = `
+          <div style="font-size:48px; filter:drop-shadow(0 8px 16px rgba(0,0,0,0.6)); padding:20px 0;">☕🥐</div>
+          <div style="font-family:'Fraunces',serif; font-size:14px; font-weight:700; color:var(--gold-bright); margin-bottom:10px;">Koffi Coffee</div>
+        `;
+      }
+    }
+  }
+
+  // Auto Countdown 5 Saat Setiap Kali Refresh / Masuk Webapp
+  function startPromoAutoCountdown(){
+    if(!promoAutoCountdownToast || isPromoPopupTriggered) return;
+    
+    // Hentikan sebarang timer sedia ada
+    if(promoCountdownTimer) clearInterval(promoCountdownTimer);
+
+    promoCountdownSeconds = 5;
+    if(promoCountdownSec) promoCountdownSec.textContent = '5';
+    if(promoCountdownBar) promoCountdownBar.style.width = '100%';
+
+    // Paparkan toast floating countdown
+    setTimeout(() => {
+      if(!isPromoPopupTriggered && promoAutoCountdownToast){
+        promoAutoCountdownToast.classList.add('show');
+      }
+    }, 400);
+
+    promoCountdownTimer = setInterval(() => {
+      promoCountdownSeconds--;
+      if(promoCountdownSec) promoCountdownSec.textContent = String(promoCountdownSeconds);
+      if(promoCountdownBar) promoCountdownBar.style.width = `${(promoCountdownSeconds / 5) * 100}%`;
+
+      if(promoCountdownSeconds <= 0){
+        clearInterval(promoCountdownTimer);
+        promoCountdownTimer = null;
+        if(promoAutoCountdownToast) promoAutoCountdownToast.classList.remove('show');
+        if(activeLivePromo && !isPromoPopupTriggered){
+          renderLivePromoUI(activeLivePromo);
+          showPromoPopup();
+        }
+      }
+    }, 1000);
+  }
+
+  function dismissPromoCountdown(){
+    if(promoCountdownTimer) clearInterval(promoCountdownTimer);
+    if(promoAutoCountdownToast) promoAutoCountdownToast.classList.remove('show');
+  }
+
+  if(btnQuickOpenPromo){
+    btnQuickOpenPromo.addEventListener('click', () => {
+      dismissPromoCountdown();
+      if(activeLivePromo){
+        renderLivePromoUI(activeLivePromo);
+        showPromoPopup();
+      }
+    });
+  }
+
+  if(btnQuickDismissPromo){
+    btnQuickDismissPromo.addEventListener('click', () => {
+      dismissPromoCountdown();
+    });
+  }
+
+  async function loadLivePromotions(){
+    // 1. Fast Cache Read (0ms instant response)
+    try {
+      const cached = localStorage.getItem('arang_active_promo_cache');
+      if(cached){
+        const parsed = JSON.parse(cached);
+        if(parsed && parsed.promo){
+          const isExp = parsed.promo.end_date && new Date(parsed.promo.end_date).getTime() <= Date.now();
+          if(!isExp){
+            activeLivePromo = parsed.promo;
+            renderLivePromoUI(activeLivePromo);
+          }
+        }
+      }
+    } catch(e){}
+
+    // 2. Fetch fresh live promo from VPS Backend API
+    const VPS_BACKEND_URL = window.VPS_BACKEND_URL || 'http://localhost:3000';
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/promotions/active`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && Array.isArray(data.promotions) && data.promotions.length > 0){
+          const validPromos = data.promotions.filter(p => !p.end_date || new Date(p.end_date).getTime() > Date.now());
+          if(validPromos.length > 0){
+            activeLivePromo = validPromos[0];
+            try {
+              localStorage.setItem('arang_active_promo_cache', JSON.stringify({
+                promo: activeLivePromo,
+                ts: Date.now()
+              }));
+            } catch(e){}
+            renderLivePromoUI(activeLivePromo);
+            if(activeLivePromo && !isPromoPopupTriggered){
+              startPromoAutoCountdown();
+            }
+            return;
+          }
+        }
+      }
+    } catch(err){
+      console.warn('Backend fetch active promotions error, trying Supabase fallback:', err.message);
+    }
+
+    // 3. Fallback direct Supabase
+    if(window.supabase && typeof window.supabase.from === 'function'){
+      try {
+        const { data, error } = await window.supabase
+          .from('promotions')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if(!error && data && data.length > 0){
+          const validPromos = data.filter(p => !p.end_date || new Date(p.end_date).getTime() > Date.now());
+          if(validPromos.length > 0){
+            activeLivePromo = validPromos[0];
+            try {
+              localStorage.setItem('arang_active_promo_cache', JSON.stringify({
+                promo: activeLivePromo,
+                ts: Date.now()
+              }));
+            } catch(e){}
+            renderLivePromoUI(activeLivePromo);
+          } else {
+            activeLivePromo = null;
+            try { localStorage.removeItem('arang_active_promo_cache'); } catch(e){}
+          }
+        } else if(!activeLivePromo) {
+          activeLivePromo = null;
+        }
+      } catch(err){
+        console.warn('Live promotion load error:', err);
+      }
+    }
+
+    // ALIRAN ASAL: Mulakan bar floating countdown 5 saat di bahagian bawah
+    if(activeLivePromo && !isPromoPopupTriggered){
+      startPromoAutoCountdown();
+    }
+  }
+
+  // Auto-tutup dan lupuskan promosi luput di Aplikasi Pelanggan setiap 3 saat
+  setInterval(() => {
+    if(activeLivePromo && activeLivePromo.end_date && new Date(activeLivePromo.end_date).getTime() <= Date.now()){
+      closePromoPopup();
+      dismissPromoCountdown();
+      activeLivePromo = null;
+      try { localStorage.removeItem('arang_active_promo_cache'); } catch(e){}
+      if(typeof loadNotifications === 'function') loadNotifications();
+    }
+  }, 3000);
+
+  // Realtime update listener on Customer Loyalty App
+  if(window.supabase && typeof window.supabase.channel === 'function'){
+    try {
+      window.supabase
+        .channel('loyalty_promotions_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => {
+          console.log('⚡ Promotion updated in realtime. Reloading...');
+          loadLivePromotions();
+          if(typeof loadNotifications === 'function') loadNotifications();
+        })
+        .subscribe();
+    } catch(e){}
+  }
+
+  function showPromoPopup(){
+    if(!promoModal || !activeLivePromo) return;
+    dismissPromoCountdown();
+    isPromoPopupTriggered = true;
+    promoModal.classList.add('show');
+    lockScroll();
+  }
+
+  function closePromoPopup(){
+    if(!promoModal) return;
+    promoModal.classList.remove('show');
+    unlockScroll();
+    const vid = promoModal.querySelector('video');
+    if(vid){
+      try { vid.pause(); } catch(e){}
+    }
+  }
+
+  if(promoCloseBtn) promoCloseBtn.addEventListener('click', closePromoPopup);
+  if(btnDismissPromo) btnDismissPromo.addEventListener('click', closePromoPopup);
+  if(promoModal) promoModal.addEventListener('click', (e)=>{ if(e.target === promoModal) closePromoPopup(); });
+
+  if(btnClaimPromo){
+    btnClaimPromo.addEventListener('click', ()=>{
+      closePromoPopup();
+      setTimeout(()=>{
+        const rSec = document.getElementById('rewardsSection');
+        if(rSec) rSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setActiveNav('navGanjaran');
+      }, 150);
+    });
+  }
+
+  // Load live stamp settings, cards, rewards & promotions on start
+  try { fetchLiveLoyaltyStampSettings(); } catch(e){}
+  try { fetchLiveLoyaltyRewardSettings(); } catch(e){}
+  try { fetchLiveLoyaltyRewards(); } catch(e){}
+  try { loadLivePromotions(); } catch(e){}
+  try {
+    const initSess = getSavedSession();
+    if(initSess && initSess.phone){
+      fetchLiveLoyaltyStampCards(initSess);
+    }
+  } catch(e){}
+
+  // ---- LIVE NOTIFICATION ENGINE & UNREAD BADGE ----
+  const btnNotification = document.getElementById('btnNotification');
+  const notifModal = document.getElementById('notifModal');
+  const notifCloseBtn = document.getElementById('notifCloseBtn');
+  const notifBadge = document.getElementById('notifBadge');
+  const notifListContainer = document.getElementById('notifListContainer');
+  const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+
+  function formatTimeAgo(isoString){
+    if(!isoString) return 'Terkini';
+    const diff = Date.now() - new Date(isoString).getTime();
+    const mins = Math.floor(diff / 60000);
+    if(mins < 60) return `${Math.max(1, mins)}m lalu`;
+    const hours = Math.floor(mins / 60);
+    if(hours < 24) return `${hours}j lalu`;
+    const days = Math.floor(hours / 24);
+    return `${days} hari lalu`;
+  }
+
+  async function loadNotifications(){
+    currentLiveNotifications = [];
+
+    // 0. Notis Tawaran Selamat Datang Untuk Pelawat Belum Log Masuk (Sentiasa didahulukan untuk tetamu)
+    const guestSess = getSavedSession();
+    if(!guestSess || !guestSess.phone){
+      currentLiveNotifications.push({
+        id: 'notif_new_member_welcome_bonus',
+        category: '🎁 TAWARAN AHLI BARU',
+        categoryColor: '#4ade80',
+        title: 'Daftar Ahli Kali Pertama & Tebus Hadiah!',
+        desc: 'Log masuk nombor WhatsApp anda sekarang untuk terima +15 Mata Ganjaran & 2 Cop Stamp PERCUMA secara automatik! ☕✨',
+        time: 'Tawaran Terkini',
+        actionType: 'welcome_info'
+      });
+    }
+
+    // 1. Fast Cache Read (0ms response)
+    let promoList = [];
+    try {
+      const cached = localStorage.getItem('arang_active_promo_cache');
+      if(cached){
+        const parsed = JSON.parse(cached);
+        if(parsed && parsed.promo){
+          const p = parsed.promo;
+          const isExp = p.end_date && new Date(p.end_date).getTime() <= Date.now();
+          if(!isExp) promoList.push(p);
+        }
+      }
+      const allCached = localStorage.getItem('arang_live_promotions');
+      if(allCached && promoList.length === 0){
+        const parsedAll = JSON.parse(allCached);
+        if(Array.isArray(parsedAll)){
+          promoList = parsedAll.filter(p => p.active !== false && (!p.endDate || new Date(p.endDate).getTime() > Date.now()));
+        }
+      }
+    } catch(e){}
+
+    // Kemas kini UI loceng secara serta-merta tanpa menunggu network
+    renderNotificationUI();
+
+    // 2. Ambil promosi aktif dari Supabase
+    if(window.supabase && typeof window.supabase.from === 'function'){
+      try {
+        const { data, error } = await window.supabase
+          .from('promotions')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+        if(!error && data && data.length > 0){
+          // Tapis promosi yang aktif dan belum luput (Hadkan kepada 5 promosi terkini)
+          promoList = data.filter(p => !p.end_date || new Date(p.end_date).getTime() > Date.now()).slice(0, 5);
+        }
+      } catch(e){}
+    }
+
+    // Hadkan maksimum 5 promosi terkini
+    promoList = promoList.slice(0, 5);
+
+    // Tukar promosi kepada notifikasi (Keluarkan hanya Caption bersih)
+    promoList.forEach(p => {
+      let rawDesc = (p.description || p.caption || '').trim();
+      let rawTitle = (p.title || p.name || '').trim();
+
+      // Buang sebarang format auto "📢 Promosi: ..." yang lama
+      if(rawDesc.startsWith('📢 Promosi: ')){
+        rawDesc = rawDesc.replace(/^📢\s*Promosi:\s*/i, '').trim();
+      }
+
+      // Tentukan caption yang bersih
+      let cleanCaption = rawDesc || rawTitle || 'Tawaran Promosi Baharu';
+
+      // Semak jika title mengandungi nama fail atau timestamp panjang (contoh: 202608171622)
+      const hasFilenamePattern = (rawTitle.match(/\d{6,}/) || rawTitle.match(/\.(jpg|jpeg|png|webp|mp4)$/i));
+
+      let cardTitle = cleanCaption;
+      let cardDesc = 'Tekan untuk melihat tawaran penuh.';
+
+      if(!hasFilenamePattern && rawTitle && rawDesc && rawTitle !== rawDesc){
+        cardTitle = rawTitle;
+        cardDesc = cleanCaption;
+      }
+
+      currentLiveNotifications.push({
+        id: 'promo_' + (p.id || Date.now()),
+        category: p.badge_label || p.badge || '🔥 Tawaran Khas',
+        categoryColor: 'var(--gold-bright)',
+        title: cardTitle,
+        desc: cardDesc,
+        time: p.created_at ? formatTimeAgo(p.created_at) : (p.created || 'Hari ini'),
+        promoData: p
+      });
+    });
+
+    // 3. Semak status ganjaran Stamp Ahli (Kad 10/10 siap ditebus)
+    if(typeof stampCards !== 'undefined' && Array.isArray(stampCards)){
+      const unclaimed = stampCards.find(c => c.status === 'unclaimed');
+      if(unclaimed){
+        currentLiveNotifications.push({
+          id: 'stamp_unclaimed_' + unclaimed.id,
+          category: '🎁 GANJARAN STAMP PENUH',
+          categoryColor: 'var(--ok)',
+          title: `Tahniah! ${unclaimed.title} Telah Lengkap (10/10)`,
+          desc: `Ganjaran '${unclaimed.rewardName}' sedia ditebus di kaunter Koffi.`,
+          time: unclaimed.completedDate || 'Hari ini',
+          actionType: 'stamp'
+        });
+      }
+    }
+
+    // 4. Semak Notis Pemenang Cabutan Bertuah Terkini
+    if(activeWinnersList && Array.isArray(activeWinnersList) && activeWinnersList.length > 0){
+      activeWinnersList.slice(0, 5).forEach(w => {
+        const emoji = w.giftType === 'menu' ? '☕' : '🎁';
+        currentLiveNotifications.push({
+          id: 'winner_' + (w.id || w.claimedAt || Math.random()),
+          category: `${emoji} PEMENANG CABUTAN`,
+          categoryColor: '#fbbf24',
+          title: `Tahniah ${w.phoneMasked}!`,
+          desc: `Berjaya memenangi dan menebus '${w.giftName}' di kaunter Koffi.`,
+          time: w.claimedAt ? formatTimeAgo(w.claimedAt) : 'Terkini'
+        });
+      });
+    }
+
+    // 5. Default Welcome Announcement jika tiada sebarang notifikasi aktif
+    if(currentLiveNotifications.length === 0){
+      currentLiveNotifications.push({
+        id: 'notif_welcome_system',
+        category: '☕ SELAMAT DATANG',
+        categoryColor: 'var(--gold-bright)',
+        title: 'Selamat Datang ke Koffi Coffee!',
+        desc: 'Kumpul mata ganjaran & cop stamp bagi setiap pesanan kopi anda.',
+        time: 'Hari ini'
+      });
+    }
+
+    // Hadkan keseluruhan senarai notifikasi kepada maksimum 8 item terkini
+    currentLiveNotifications = currentLiveNotifications.slice(0, 8);
+
+    renderNotificationUI();
+  }
+
+  function renderNotificationUI(){
+    if(!notifListContainer) return;
+    notifListContainer.innerHTML = '';
+
+    // Dapatkan senarai ID yang telah dibaca oleh pengguna
+    let readIds = [];
+    try {
+      const stored = localStorage.getItem('arang_read_notif_ids');
+      if(stored) readIds = JSON.parse(stored);
+    } catch(e){}
+
+    const unreadCount = currentLiveNotifications.filter(n => !readIds.includes(n.id)).length;
+
+    // Kemas kini nombor pada bulat merah loceng serta-merta
+    if(notifBadge){
+      if(unreadCount > 0){
+        notifBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        notifBadge.style.display = 'flex';
+      } else {
+        notifBadge.style.display = 'none';
+      }
+    }
+
+    // Butang "Tanda Semua Dibaca" di header modal
+    if(btnMarkAllRead){
+      if(unreadCount > 0){
+        btnMarkAllRead.style.display = 'inline-block';
+        btnMarkAllRead.onclick = () => {
+          const allIds = currentLiveNotifications.map(n => n.id);
+          try {
+            localStorage.setItem('arang_read_notif_ids', JSON.stringify(allIds));
+          } catch(e){}
+          renderNotificationUI();
+        };
+      } else {
+        btnMarkAllRead.style.display = 'none';
+      }
+    }
+
+    // Jika tiada notifikasi
+    if(currentLiveNotifications.length === 0){
+      notifListContainer.innerHTML = `
+        <div style="text-align:center; padding:36px 12px; color:var(--muted); font-size:12.5px;">
+          <div style="font-size:32px; margin-bottom:8px; opacity:0.6;">🔔</div>
+          Tiada pemberitahuan atau tawaran baharu buat masa ini. ✨
+        </div>
+      `;
+      return;
+    }
+
+    // Render setiap kad notifikasi (Belum tekan = Block Terang, Dah tekan = Block Pudar)
+    currentLiveNotifications.forEach(notif => {
+      const isUnread = !readIds.includes(notif.id);
+      const card = document.createElement('div');
+      
+      // Kelas dinamik: 'notif-unread' (terang) atau 'notif-read' (pudar sikit)
+      card.className = `notif-card-item ${isUnread ? 'notif-unread' : 'notif-read'}`;
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:10.5px; font-weight:800; color:${isUnread ? notif.categoryColor : 'var(--gold)'}; letter-spacing:0.02em;">${notif.category}</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:10px; color:${isUnread ? 'var(--cream-dim)' : 'var(--muted)'}; font-family:'IBM Plex Mono',monospace;">${notif.time}</span>
+            ${isUnread ? '<span class="notif-unread-dot" title="Belum Dibaca"></span>' : '<span style="font-size:10px; color:var(--muted); opacity:0.6;">✓</span>'}
+          </div>
+        </div>
+        <h4 class="notif-card-title" style="font-size:13px; margin:0 0 3px; line-height:1.3;">${notif.title}</h4>
+        <p class="notif-card-desc" style="font-size:11.5px; margin:0; line-height:1.45;">${notif.desc}</p>
+      `;
+
+      card.addEventListener('click', () => {
+        // Tandakan item ini sebagai telah dibaca secara spesifik
+        if(!readIds.includes(notif.id)){
+          readIds.push(notif.id);
+          try {
+            localStorage.setItem('arang_read_notif_ids', JSON.stringify(readIds));
+          } catch(e){}
+          // Kemas kini UI serta merta
+          renderNotificationUI();
+        }
+
+        closeNotifModal();
+
+        // Buka popup promosi berkaitan atau skrol ke cop stamp (TIDAK auto buka popup log in)
+        if(notif.promoData){
+          activeLivePromo = notif.promoData;
+          renderLivePromoUI(notif.promoData);
+          setTimeout(() => showPromoPopup(), 180);
+        } else if(notif.actionType === 'stamp'){
+          setTimeout(() => {
+            const sSec = document.getElementById('stampSection');
+            if(sSec) sSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 150);
+        }
+      });
+
+      notifListContainer.appendChild(card);
+    });
+  }
+
+  function openNotifModal(){
+    if(!notifModal) return;
+    notifModal.classList.add('show');
+    lockScroll();
+    loadNotifications();
+    renderNotificationUI();
+  }
+
+  function closeNotifModal(){
+    if(!notifModal) return;
+    notifModal.classList.remove('show');
+    unlockScroll();
+  }
+
+  if(btnNotification) btnNotification.addEventListener('click', openNotifModal);
+  if(notifCloseBtn) notifCloseBtn.addEventListener('click', closeNotifModal);
+  if(notifModal) notifModal.addEventListener('click', (e)=>{ if(e.target === notifModal) closeNotifModal(); });
+
+  // Panggil muat turun notifikasi semasa mula
+  try { loadNotifications(); } catch(e){}
+
+  // ---- SESSION & LOCAL BROWSER STORAGE KEYS ----
+  const SESSION_KEY = 'arang_member_session';
+  const PENDING_REQUESTS_KEY = 'arang_pending_otp_requests';
+  const MEMBERS_KEY = 'arang_members';
+
+  function getSavedSession(){
+    try {
+      const str = localStorage.getItem(SESSION_KEY);
+      return str ? JSON.parse(str) : null;
+    } catch(e){ return null; }
+  }
+
+  function saveSession(session){
+    if(!session) return;
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    } catch(e){}
+  }
+
+  function saveMemberSession(phone, memberData){
+    const session = {
+      phone: phone,
+      name: (memberData && memberData.name) || ('Ahli ' + phone.slice(-4)),
+      points: (memberData && memberData.points) !== undefined ? memberData.points : 15,
+      stamps: (memberData && memberData.stamps) !== undefined ? memberData.stamps : 1,
+      tier: (memberData && memberData.tier) || 'Ahli Gangsa',
+      token: (memberData && memberData.token) || ('jwt_' + Date.now()),
+      loggedInAt: Date.now()
+    };
+    saveSession(session);
+    return session;
+  }
+
+  function logoutMember(){
+    localStorage.removeItem(SESSION_KEY);
+    updateAuthUI(null);
+    toast.textContent = 'Log keluar berjaya. Sesi peranti ini telah dipadam.';
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 2200);
+  }
+
+  function updateAuthUI(session){
+    const userName = document.getElementById('userName');
+    const navAuthLabel = document.getElementById('navAuthLabel');
+    const navAuthIcon = document.getElementById('navAuthIcon');
+
+    if(session && session.phone){
+      if(userName) userName.textContent = `${session.name || session.phone}`;
+      if(navAuthLabel) navAuthLabel.textContent = 'Log Keluar';
+      if(navAuthIcon){
+        navAuthIcon.innerHTML = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>';
+      }
+    } else {
+      if(userName) userName.textContent = 'Tetamu';
+      if(navAuthLabel) navAuthLabel.textContent = 'Log Masuk';
+      if(navAuthIcon){
+        navAuthIcon.innerHTML = '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>';
+      }
+    }
+
+    // Kemas kini paparan mata, cop stamp & ganjaran mengikut status log masuk
+    if(typeof renderPointsUI === 'function') renderPointsUI(session);
+    if(session && session.phone && typeof fetchLiveLoyaltyStampCards === 'function'){
+      fetchLiveLoyaltyStampCards(session);
+    } else if(typeof renderStampSystem === 'function') {
+      renderStampSystem(session);
+    }
+    if(typeof renderRewards === 'function') renderRewards(session);
+  }
+
+  function openLoginPopup(){
+    loginModal.classList.add('show');
+    lockScroll();
+    const isLocked = checkLockoutState();
+    updateAttemptBadge();
+    if(!isLocked){
+      setTimeout(()=> loginPhoneInput.focus(), 300);
+    }
+  }
+
+  function closeLoginPopup(){
+    loginModal.classList.remove('show');
+    unlockScroll();
+    // Paparan gambar popup Iklan & Promosi terkini selepas modal login ditutup
+    if(activeLivePromo && !isPromoPopupTriggered){
+      setTimeout(()=> showPromoPopup(), 350);
+    }
+  }
+
+  if(loginCloseBtn) loginCloseBtn.addEventListener('click', closeLoginPopup);
+  if(loginModal) loginModal.addEventListener('click', (e)=>{
+    if(e.target === loginModal) closeLoginPopup();
+  });
+
+  // Limit phone input to max 15 numeric digits with clean formatting
+  if(loginPhoneInput) loginPhoneInput.addEventListener('input', (e)=>{
+    let raw = e.target.value.replace(/[^0-9]/g, '');
+    if(raw.length > 15) raw = raw.slice(0, 15);
+
+    let formatted = raw;
+    if(raw.length > 3 && raw.length <= 7){
+      formatted = raw.slice(0,3) + '-' + raw.slice(3);
+    } else if(raw.length > 7 && raw.length <= 11){
+      formatted = raw.slice(0,3) + '-' + raw.slice(3,6) + ' ' + raw.slice(6);
+    } else if(raw.length > 11){
+      formatted = raw.slice(0,3) + '-' + raw.slice(3,6) + ' ' + raw.slice(6,10) + ' ' + raw.slice(10);
+    }
+    e.target.value = formatted;
+  });
+
+  // WhatsApp OTP Request & 3-Minute (180s) Persistent Cooldown
+  let activeOtpCode = null;
+  let countdownTimer = null;
+  let countdownSeconds = 180; // 3 minit = 180 saat
+
+  function startOtpCountdown(customSeconds){
+    clearInterval(countdownTimer);
+    const now = Date.now();
+    let storedExpires = parseInt(localStorage.getItem('arang_otp_cooldown_expires_at') || '0', 10);
+
+    if (customSeconds) {
+      storedExpires = now + (customSeconds * 1000);
+      localStorage.setItem('arang_otp_cooldown_expires_at', String(storedExpires));
+    } else if (!storedExpires || storedExpires <= now) {
+      storedExpires = now + (180 * 1000);
+      localStorage.setItem('arang_otp_cooldown_expires_at', String(storedExpires));
+    }
+
+    countdownSeconds = Math.max(0, Math.ceil((storedExpires - now) / 1000));
+    if(countdownSeconds <= 0){
+      localStorage.removeItem('arang_otp_cooldown_expires_at');
+      if(btnWaOtp) btnWaOtp.disabled = false;
+      if(btnWaOtpText) btnWaOtpText.textContent = 'Minta Kod OTP via WhatsApp';
+      if(otpTimerContainer) otpTimerContainer.style.visibility = 'hidden';
+      return;
+    }
+
+    if(btnWaOtp) btnWaOtp.disabled = true;
+    if(otpTimerContainer) otpTimerContainer.style.visibility = 'visible';
+
+    function updateTimerDisplay(){
+      const m = Math.floor(countdownSeconds / 60);
+      const s = countdownSeconds % 60;
+      const fmt = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      if(otpTimerText) otpTimerText.textContent = fmt;
+      if(btnWaOtpText) btnWaOtpText.textContent = `Minta semula (${fmt})`;
+    }
+    updateTimerDisplay();
+
+    countdownTimer = setInterval(()=>{
+      const curNow = Date.now();
+      const rem = Math.max(0, Math.ceil((storedExpires - curNow) / 1000));
+      countdownSeconds = rem;
+      if(countdownSeconds <= 0){
+        clearInterval(countdownTimer);
+        localStorage.removeItem('arang_otp_cooldown_expires_at');
+        if(!checkLockoutState()){
+          if(btnWaOtp) btnWaOtp.disabled = false;
+        }
+        if(btnWaOtpText) btnWaOtpText.textContent = 'Minta Kod OTP via WhatsApp Semula';
+        if(otpTimerText) otpTimerText.textContent = '00:00 (Telah Luput)';
+        activeOtpCode = null; // Kod OTP luput selepas 3 minit
+      } else {
+        updateTimerDisplay();
+      }
+    }, 1000);
+  }
+
+  if(btnWaOtp) {
+    btnWaOtp.addEventListener('click', async ()=>{
+      if(checkLockoutState()){
+        toast.textContent = 'Akaun disekat sementara. Sila tunggu 1 jam.';
+        toast.classList.add('show');
+        setTimeout(()=> toast.classList.remove('show'), 2200);
+        return;
+      }
+
+      const rawVal = loginPhoneInput ? loginPhoneInput.value.replace(/[^0-9]/g, '') : '';
+      if(!rawVal || rawVal.length < 8){
+        toast.textContent = 'Sila masukkan nombor telefon yang sah (min. 8 angka)';
+        toast.classList.add('show');
+        setTimeout(()=> toast.classList.remove('show'), 2000);
+        if(loginPhoneInput) loginPhoneInput.focus();
+        return;
+      }
+
+      // Format nombor telefon
+      let cleanPhone = rawVal;
+      if(cleanPhone.startsWith('60')) cleanPhone = '0' + cleanPhone.slice(2);
+      else if(!cleanPhone.startsWith('0') && cleanPhone.length >= 9) cleanPhone = '0' + cleanPhone;
+
+      let displayPhone = '+60';
+      if(rawVal.startsWith('60')){
+        displayPhone = '+' + rawVal;
+      } else if(rawVal.startsWith('0')){
+        displayPhone = '+60' + rawVal.slice(1);
+      } else {
+        displayPhone = '+60' + rawVal;
+      }
+
+      btnWaOtp.disabled = true;
+      if(btnWaOtpText) btnWaOtpText.textContent = 'Mendaftar Permintaan...';
+
+      let waUrl = `https://wa.me/601123456789?text=${encodeURIComponent('Request OTP')}`;
+
+      try {
+        const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/otp/request`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: cleanPhone })
+        });
+        const data = await res.json();
+        if(data.success && data.waUrl){
+          waUrl = data.waUrl;
+        }
+      } catch(err){
+        console.warn('Backend offline fallback for OTP request:', err.message);
+      }
+
+      // 1. TRIGGER REQUEST DALAM SISTEM
+      let allRequests = [];
+      try {
+        allRequests = JSON.parse(localStorage.getItem(PENDING_REQUESTS_KEY) || '[]');
+      } catch(e){}
+      
+      allRequests = allRequests.filter(r => r.phone !== cleanPhone);
+      
+      const now = Date.now();
+      const newRequest = {
+        id: now,
+        phone: cleanPhone,
+        rawPhone: displayPhone,
+        status: 'requested',
+        requestedAt: now,
+        expiresAt: now + (180 * 1000) // Luput dalam 3 minit
+      };
+      allRequests.unshift(newRequest);
+      localStorage.setItem(PENDING_REQUESTS_KEY, JSON.stringify(allRequests));
+
+      // 2. BAWAK KE WHATSAPP BOT DENGAN TRIGGER KEYWORD
+      window.open(waUrl, '_blank');
+
+      if(toast){
+        toast.textContent = `Membuka WhatsApp... Sila hantar kata kunci 'Request OTP' ke Bot!`;
+        toast.classList.add('show');
+        setTimeout(()=> toast.classList.remove('show'), 3500);
+      }
+
+      startOtpCountdown(180);
+
+      // Kosongkan kotak OTP & fokus pada kotak pertama
+      otpBoxes.forEach(b => { if(b) b.value = ''; });
+      if(otpBoxes[0]) otpBoxes[0].focus();
+    });
+  }
+
+  // OTP Digits auto-advance, backspace & paste
+  otpBoxes.forEach((box, idx)=>{
+    if(!box) return;
+    box.addEventListener('input', (e)=>{
+      const clean = e.target.value.replace(/[^0-9]/g, '');
+      box.value = clean ? clean.slice(-1) : '';
+      if(clean && idx < otpBoxes.length - 1 && otpBoxes[idx + 1]){
+        otpBoxes[idx + 1].focus();
+      }
+    });
+
+    box.addEventListener('keydown', (e)=>{
+      if(e.key === 'Backspace' && !box.value && idx > 0 && otpBoxes[idx - 1]){
+        otpBoxes[idx - 1].focus();
+      }
+    });
+
+    box.addEventListener('paste', (e)=>{
+      e.preventDefault();
+      const pasteText = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+      if(pasteText){
+        for(let i=0; i<otpBoxes.length; i++){
+          if(otpBoxes[i]) otpBoxes[i].value = pasteText[i] || '';
+        }
+        const targetIdx = Math.min(pasteText.length, otpBoxes.length - 1);
+        if(otpBoxes[targetIdx]) otpBoxes[targetIdx].focus();
+      }
+    });
+  });
+
+  // Verify OTP handler dengan 5 kali had percubaan & 1 jam sekatan
+  if(btnVerifyOtp) {
+    btnVerifyOtp.addEventListener('click', async ()=>{
+      if(checkLockoutState()){
+        if(toast){
+          toast.textContent = 'Akaun disekat sementara. Sila tunggu 1 jam.';
+          toast.classList.add('show');
+          setTimeout(()=> toast.classList.remove('show'), 2200);
+        }
+        return;
+      }
+
+      const enteredCode = otpBoxes.filter(Boolean).map(b => b.value.trim()).join('');
+      if(enteredCode.length < 4){
+        if(toast){
+          toast.textContent = 'Sila masukkan 4-digit kod OTP yang lengkap';
+          toast.classList.add('show');
+          setTimeout(()=> toast.classList.remove('show'), 2000);
+        }
+        return;
+      }
+
+      const rawVal = loginPhoneInput ? loginPhoneInput.value.replace(/[^0-9]/g, '') : '';
+      let cleanPhone = rawVal;
+      if(cleanPhone.startsWith('60')) cleanPhone = '0' + cleanPhone.slice(2);
+      else if(!cleanPhone.startsWith('0') && cleanPhone.length >= 9) cleanPhone = '0' + cleanPhone;
+
+      btnVerifyOtp.disabled = true;
+      btnVerifyOtp.textContent = 'Mengesahkan...';
+
+      let isVerified = false;
+      let memberData = null;
+      let sessionToken = null;
+      let respMsg = '';
+
+      try {
+        const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/otp/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: cleanPhone, otp: enteredCode })
+        });
+        const data = await res.json();
+        if(data.success && data.member){
+          isVerified = true;
+          memberData = data.member;
+          sessionToken = data.sessionToken;
+          respMsg = data.message;
+        } else if(data.error){
+          respMsg = data.error;
+        }
+      } catch(err){
+        console.warn('Backend verify offline fallback:', err.message);
+      }
+
+      btnVerifyOtp.disabled = false;
+      btnVerifyOtp.textContent = 'Sahkan & Log Masuk';
+
+      // Fallback local jika server offline
+      if(!isVerified && activeOtpCode && enteredCode === activeOtpCode){
+        isVerified = true;
+        memberData = {
+          name: 'Ahli ' + cleanPhone.slice(-4),
+          phone: cleanPhone,
+          points: 15,
+          stamps: 2,
+          tier: 'Ahli Gangsa'
+        };
+        sessionToken = 'jwt_' + Date.now();
+        respMsg = 'Log masuk berjaya! Selamat datang ke Koffi (+15 Mata & 2 Cop Percuma!) 🎉';
+      }
+
+      if(isVerified && memberData){
+        // Log masuk berjaya: reset percubaan & padam cooldown timer
+        resetLockout();
+        clearInterval(countdownTimer);
+        localStorage.removeItem('arang_otp_cooldown_expires_at');
+        if(btnWaOtp) btnWaOtp.disabled = false;
+        if(btnWaOtpText) btnWaOtpText.textContent = 'Minta Kod OTP via WhatsApp';
+        if(otpTimerContainer) otpTimerContainer.style.visibility = 'hidden';
+
+        // SIMPAN SESI LOGIN DENGAN JWT TOKEN DALAM LOCAL BROWSER (UNTUK PERANTI INI)
+        const session = saveMemberSession(cleanPhone, {
+          name: memberData.name || ('Ahli ' + cleanPhone.slice(-4)),
+          points: memberData.points !== undefined ? memberData.points : 15,
+          stamps: memberData.stamps !== undefined ? memberData.stamps : 2,
+          tier: memberData.tier || 'Ahli Gangsa',
+          token: sessionToken || ('jwt_' + Date.now())
+        });
+        updateAuthUI(session);
+        fetchLiveLoyaltyStampCards(session);
+        loadNotifications();
+
+        if(toast){
+          toast.textContent = respMsg || 'Log masuk berjaya! Sesi peranti ini telah disimpan 🎉';
+          toast.classList.add('show');
+          setTimeout(()=> toast.classList.remove('show'), 3000);
+        }
+
+        closeLoginPopup();
+      } else {
+        // Pin / OTP salah: tambah kiraan gagal
+        failedAttempts++;
+        localStorage.setItem('arang_otp_failed_attempts', String(failedAttempts));
+
+        // Animasi goncang kotak OTP
+        if(otpDigitsRow){
+          otpDigitsRow.classList.remove('shake');
+          void otpDigitsRow.offsetWidth;
+          otpDigitsRow.classList.add('shake');
+        }
+
+        // Kosongkan kotak OTP & kembali fokus pada yang pertama
+        otpBoxes.forEach(b => { if(b) b.value = ''; });
+        if(otpBoxes[0]) otpBoxes[0].focus();
+
+        if(failedAttempts >= MAX_ATTEMPTS){
+          triggerLockout();
+        } else {
+          const remaining = MAX_ATTEMPTS - failedAttempts;
+          updateAttemptBadge();
+          if(toast){
+            toast.textContent = respMsg || `Pin / OTP tidak sah! Baki percubaan: ${remaining} kali`;
+            toast.classList.add('show');
+            setTimeout(()=> toast.classList.remove('show'), 2400);
+          }
+        }
+      }
+    });
+  }
+
+  // Semak sekatan semasa halaman dimuatkan
+  try { checkLockoutState(); } catch(e){}
+  try { updateAttemptBadge(); } catch(e){}
+
+  // ---- SEMAKAN SESI PERANTI (DEVICE PERSISTENCE) ----
+  try {
+    const currentSession = getSavedSession();
+    if(currentSession && currentSession.phone){
+      // Peranti sedia ada: terus aktifkan sesi
+      updateAuthUI(currentSession);
+      fetchLiveLoyaltyStampCards(currentSession);
+      if(loginPhoneInput) loginPhoneInput.value = currentSession.phone;
+    } else {
+      // Tetamu: paparkan UI tetamu (tiada auto pop-up log masuk semasa refresh / masuk webapp)
+      updateAuthUI(null);
+    }
+
+    // Semak jika ada countdown OTP yang masih aktif semasa page refresh
+    const savedCooldown = parseInt(localStorage.getItem('arang_otp_cooldown_expires_at') || '0', 10);
+    if(savedCooldown > Date.now()){
+      startOtpCountdown();
+    }
+  } catch(e){
+    console.error('Session persistence check error:', e);
+  }
+
+  // ---- BOTTOM NAV HANDLERS ----
+  const navStamp = document.getElementById('navStamp');
+  const navGanjaran = document.getElementById('navGanjaran');
+  const navAuthBtn = document.getElementById('navAuthBtn');
+  const allNavItems = document.querySelectorAll('.nav-item');
+
+  function setActiveNav(navId){
+    allNavItems.forEach(b => b.classList.remove('active'));
+    const target = document.getElementById(navId);
+    if(target) target.classList.add('active');
+  }
+
+  if(navStamp){
+    navStamp.addEventListener('click', ()=>{
+      setActiveNav('navStamp');
+      const stampSec = document.getElementById('stampSection');
+      if(stampSec) stampSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  if(navGanjaran){
+    navGanjaran.addEventListener('click', ()=>{
+      setActiveNav('navGanjaran');
+      const rewardsSec = document.getElementById('rewardsSection');
+      if(rewardsSec) rewardsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  if(navAuthBtn){
+    navAuthBtn.addEventListener('click', ()=>{
+      const session = getSavedSession();
+      if(session){
+        if(confirm(`Anda sedang log masuk sebagai ${session.name || session.phone}.\nAdakah anda mahu log keluar dari peranti ini?`)){
+          logoutMember();
+        }
+      } else {
+        openLoginPopup();
+      }
+    });
+  }
+
+  // Pastikan skrol terbuka bebas pada permulaan muatan laman
+  unlockScroll();
+</script>
+</body>
+</html>

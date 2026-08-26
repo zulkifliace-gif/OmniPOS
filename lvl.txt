@@ -1,0 +1,61 @@
+ TAHAP 1: Paling Ringkas & Terus (Simple CRUD)
+Hanya melibatkan operasi simpan, kemas kini, dan ambil data tanpa logik perniagaan yang rumit.
+
+Iklan & Promosi (Popup & Banner)
+Tugas: Ambil senarai banner aktif untuk dipaparkan di Kad Ahli dan POS.
+Sebab Mudah: Hanya membaca data dari jadual promotions (WHERE is_active = true ORDER BY sort_order).
+Katalog Menu Produk, Kategori & Add-on
+Tugas: Papar senarai produk, harga variasi (Panas/Ais/Saiz), dan pilihan add-on.
+Sebab Mudah: Hanya bacaan pangkalan data biasa pada jadual products & product_categories.
+Rekod Kehadiran Staf (Clock-In / Clock-Out)
+Tugas: Simpan waktu masuk dan waktu tamat syif juruwang ke jadual staff_attendance.
+Sebab Mudah: Insert timestamp biasa tanpa banyak pengesahan luaran.
+🟡 TAHAP 2: Sederhana (Medium — Logik Pengiraan & Penapisan Data)
+Melibatkan penapisan (filtering), pagination, julat tarikh, dan formula pengiraan kewangan.
+
+Urus Ahli (5 Top Ahli + Carian Atas Permintaan)
+Tugas: Papar 5 ahli mata tertinggi secara lalai, susunan filter (Mata / Terkini / Cop), dan carian spesifik.
+Cabaran: Perlu gunakan indexing B-Tree pantas dan konsep load on demand supaya tidak membebankan pelayar apabila ahli mencecah puluhan ribu orang.
+Kira & Bayar Gaji Staf (Payroll & Shift Range)
+Tugas: Kira gaji asas, lebih masa (OT), elaun, dan potongan caruman (KWSP/SOCSO) mengikut pilihan preset tarikh (Bulan ini, bulan lepas, 1–15hb, dsb.).
+Cabaran: Memastikan pengiraan formula matematik gaji adalah tepat sebelum disimpan ke salary_payments.
+e-Invois LHDN & Maklumat Perniagaan
+Tugas: Penyatuan resit harian (consolidated e-invoice) dan penyerahan data pembeli (TIN/SSM/Alamat) ke profil kedai.
+🟠 TAHAP 3: Agak Rumit (Advanced — Transaksi Multi-Jadual & Pencegahan Ralat)
+Melibatkan kemas kini beberapa jadual serentak, transaksi pangkalan data atomik, dan pencegahan duplikasi data.
+
+Cabutan Bertuah (Lucky Draw)
+Tugas: Pengesahan kod resit bertuah (cth: ARG-4821), pastikan kod wujud dan belum pernah ditebus, kemudian kunci kod tersebut.
+Cabaran: Perlu kunci baris (Row-Level Lock) supaya kod yang sama tidak boleh ditebus dua kali serentak.
+Jualan Kaunter POS & Kredit Mata Ahli (add_points)
+Tugas: Cipta resit jualan sales, rekod setiap item dalam sale_items, tolak baki stok menu, dan tambah mata ahli.
+Cabaran:
+Memerlukan sekatan UNIQUE INDEX dan semakan member_transactions supaya juruwang tidak tersilap kredit mata dua kali pada bil yang sama (double-credit prevention).
+Menolak stok bahan/item utama dan add-on secara tepat.
+Sistem Kad Cop Multi-Card Automatik (add_stamp)
+Tugas: Tambah cop pada kad aktif; jika mencecah 10/10 cop, sistem perlu automatik tukar status kad ke unclaimed dan bina baris kad baru collecting untuk cop seterusnya.
+Cabaran: Logik transisi status kad dan penyegerakan kiraan cop aktif di jadual members.
+🔴 TAHAP 4: Paling Rumit & Kritikal (Kalis Serangan, Concurrency & Gateway Luaran)
+Bahagian paling kompleks kerana melibatkan pelayan VPS berterusan, keselamatan Zero-Trust, kriptografi JWT, dan integrasi WhatsApp.
+
+Tebus Ganjaran Selamat (Zero-Trust redeem_points)
+
+Tugas: Pelanggan menekan "Tebus" di telefon mereka untuk mendapatkan kupon kopi percuma.
+Mengapa Rumit:
+Zero-Trust: Parameter p_member_id tidak dibenarkan daripada klien — Postgres sendiri derive identiti melalui auth.uid() daripada JWT Token.
+Pencegahan Overdraft: Menggunakan FOR UPDATE lock pada baris akaun ahli di pangkalan data supaya pelanggan tidak boleh menekan butang tebus serentak di 2 telefon untuk menghabiskan mata yang sama.
+Semakan kuota stok ganjaran aktif (stock_limit).
+Enjin WhatsApp Bot, OTP 3-Minit & Kawalan Had Kadar (Rate Limiting)
+
+Tugas: Menerima mesej WhatsApp AHLI <NO>, padankan dengan senarai aktif di Redis, dan balas kod OTP serta-merta.
+Mengapa Ini Paling Rumit Dalam Seluruh Sistem:
+Sambungan Berterusan (Persistent Gateway): Bot mesti sentiasa online 24/7 di VPS untuk mendengar webhook mesej masuk.
+Enjin Luput Tepat 3 Minit: Redis cache dengan TTL = 180s untuk memadam OTP automatik tanpa membebankan PostgreSQL.
+2 Lapisan Had Kadar (Dual-Layer Rate Limiter):
+Phone Rate Limit: Maksimum 3 permintaan OTP setiap 10 minit bagi setiap nombor.
+IP Rate Limit: Maksimum 10 permintaan setiap jam bagi setiap alamat IP (dengan sokongan trust proxy untuk Nginx/Cloudflare).
+Kawalan Sekatan 1 Jam (Lockout): Mengira 5 kali cubaan salah semasa verify.
+Penjanaan JWT Session 30-Hari: Menjana token sesi yang disahkan secara kriptografi dengan SUPABASE_JWT_SECRET untuk membolehkan pelayar berkomunikasi secara sah dengan polisi RLS Supabase.
+Supabase Realtime Synchronization (Live No-Refresh)
+
+Tugas: Apabila kaunter POS tekan selesai bayaran, baki mata & cop pada skrin telefon pelanggan terus berubah secara langsung (live) tanpa perlu muat semula skrin (no reload).
