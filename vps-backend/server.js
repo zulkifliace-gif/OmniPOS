@@ -219,8 +219,14 @@ app.get(['/pos', '/arang-pos.html'], (req, res) => {
 app.get(['/loyalty', '/arang-loyalty.html'], (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'arang-loyalty.html'));
 });
-app.get(['/buy-me-coffee-icon.svg', '/favicon.ico', '/favicon.svg'], (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'buy-me-coffee-icon.svg'));
+app.get(['/buy-me-coffee-icon.svg', '/pos/buy-me-coffee-icon.svg', '/loyalty/buy-me-coffee-icon.svg', '/favicon.ico', '/favicon.svg'], (req, res) => {
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  const iconPath = path.join(__dirname, '..', 'buy-me-coffee-icon.svg');
+  if (fs.existsSync(iconPath)) return res.sendFile(iconPath);
+  const altPath = path.join(__dirname, 'uploads', 'buy-me-coffee-icon.svg');
+  if (fs.existsSync(altPath)) return res.sendFile(altPath);
+  res.status(404).send('Icon not found');
 });
 
 // Portal Laman Utama (Root /)
