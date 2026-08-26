@@ -1,0 +1,42 @@
+{
+  "name": "Koffi Loyalty — Kad Ahli & Ganjaran",
+  "short_name": "Koffi",
+  "description": "Kumpul cop, tebus ganjaran & sertai cabutan bertuah Koffi Kopi & Pastri",
+  "start_url": "/loyalty",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1208",
+  "theme_color": "#CDA36A",
+  "lang": "ms",
+  "icons": [
+    {
+      "src": "/buy-me-coffee-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cabutan Bertuah",
+      "short_name": "Cabutan",
+      "description": "Masukkan kod bertuah dari resit",
+      "url": "/loyalty#lucky",
+      "icons": [{ "src": "/buy-me-coffee-icon.svg", "sizes": "any" }]
+    }
+  ],
+  "categories": ["food", "shopping", "lifestyle"]
+}

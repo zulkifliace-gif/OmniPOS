@@ -7605,6 +7605,42 @@ app.get(['/api/loyalty/lucky-draw/winners', '/api/pos/lucky-draw/winners'], asyn
   }
 });
 
+// ═══════════════════════════════════════════════════════════════
+// LALUAN FAIL STATIK PWA (manifest.json, sw.js, HTML pages)
+// ═══════════════════════════════════════════════════════════════
+const ROOT_DIR = path.join(__dirname, '..');
+
+// Serve PWA manifest.json
+app.get('/manifest.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/manifest+json');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(path.join(ROOT_DIR, 'manifest.json'), err => {
+    if (err) res.status(404).json({ error: 'manifest.json not found' });
+  });
+});
+
+// Serve Service Worker (mestilah di root agar scope = '/')
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(path.join(ROOT_DIR, 'sw.js'), err => {
+    if (err) res.status(404).json({ error: 'sw.js not found' });
+  });
+});
+
+// Serve Loyalty & POS HTML pages
+app.get(['/loyalty', '/loyalty.html'], (req, res) => {
+  res.sendFile(path.join(ROOT_DIR, 'arang-loyalty.html'), err => {
+    if (err) res.status(404).send('Loyalty page not found');
+  });
+});
+app.get(['/pos', '/pos.html'], (req, res) => {
+  res.sendFile(path.join(ROOT_DIR, 'arang-pos.html'), err => {
+    if (err) res.status(404).send('POS page not found');
+  });
+});
+
 // Global 404 Handler for API routes (Always return JSON, never HTML)
 app.use('/api', (req, res) => {
   res.status(404).json({

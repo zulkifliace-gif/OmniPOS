@@ -6,6 +6,12 @@
 <title>Koffi — Kad Ahli</title>
 <link rel="icon" type="image/svg+xml" href="/buy-me-coffee-icon.svg">
 <link rel="apple-touch-icon" href="/buy-me-coffee-icon.svg">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#CDA36A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Koffi">
+<meta name="mobile-web-app-capable" content="yes">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap');
@@ -4359,6 +4365,162 @@
 
   // Pastikan skrol terbuka bebas pada permulaan muatan laman
   unlockScroll();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PWA INSTALL POPUP — 1-Click Pasang ke Skrin Utama Telefon
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="pwaInstallOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:flex-end; justify-content:center; padding-bottom:env(safe-area-inset-bottom,0px);">
+  <div style="background:var(--surface,#171210); border:1px solid rgba(205,163,106,0.3); border-radius:20px 20px 0 0; padding:24px 20px 28px; width:100%; max-width:460px; animation:slideUpFade .3s ease;">
+    <!-- Ikon + Tajuk -->
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+      <img src="/buy-me-coffee-icon.svg" alt="Koffi" style="width:52px; height:52px; border-radius:14px; background:rgba(205,163,106,0.12); padding:8px; border:1px solid rgba(205,163,106,0.25);">
+      <div>
+        <div style="font-family:'Fraunces',serif; font-size:17px; font-weight:700; color:var(--cream,#f3ead9); line-height:1.2;">Pasang App Koffi</div>
+        <div style="font-size:12px; color:var(--muted,#8a7260); margin-top:2px;">koffi-demo.duckdns.org</div>
+      </div>
+      <button id="pwaDismissBtn" style="margin-left:auto; background:none; border:none; color:var(--muted,#8a7260); font-size:22px; cursor:pointer; padding:4px; line-height:1;" title="Tutup">✕</button>
+    </div>
+
+    <!-- Faedah-faedah -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px;">
+      <div style="background:rgba(205,163,106,0.08); border:1px solid rgba(205,163,106,0.15); border-radius:10px; padding:10px 12px; font-size:12px; color:var(--cream-dim,#c9b99a);">
+        <div style="font-size:18px; margin-bottom:4px;">⚡</div>Buka pantas<br>tanpa cari URL
+      </div>
+      <div style="background:rgba(205,163,106,0.08); border:1px solid rgba(205,163,106,0.15); border-radius:10px; padding:10px 12px; font-size:12px; color:var(--cream-dim,#c9b99a);">
+        <div style="font-size:18px; margin-bottom:4px;">🎁</div>Dapat notifikasi<br>cabutan bertuah
+      </div>
+      <div style="background:rgba(205,163,106,0.08); border:1px solid rgba(205,163,106,0.15); border-radius:10px; padding:10px 12px; font-size:12px; color:var(--cream-dim,#c9b99a);">
+        <div style="font-size:18px; margin-bottom:4px;">📶</div>Boleh guna<br>tanpa internet
+      </div>
+      <div style="background:rgba(205,163,106,0.08); border:1px solid rgba(205,163,106,0.15); border-radius:10px; padding:10px 12px; font-size:12px; color:var(--cream-dim,#c9b99a);">
+        <div style="font-size:18px; margin-bottom:4px;">🛡️</div>Tiada data<br>dikutip
+      </div>
+    </div>
+
+    <!-- Butang Pasang (Android/Chrome — 1 klik) -->
+    <button id="pwaInstallBtn" style="display:none; width:100%; background:linear-gradient(135deg,#CDA36A,#a07840); color:#fff; border:none; border-radius:14px; padding:15px; font-size:15px; font-weight:700; cursor:pointer; font-family:'Manrope',sans-serif; letter-spacing:.3px;">
+      📲 Pasang Sekarang — 1 Klik
+    </button>
+
+    <!-- Arahan manual iOS (Safari) -->
+    <div id="pwaIosGuide" style="display:none;">
+      <div style="background:rgba(205,163,106,0.08); border:1px solid rgba(205,163,106,0.2); border-radius:12px; padding:14px; font-size:13px; color:var(--cream-dim,#c9b99a); line-height:1.7;">
+        <div style="font-weight:700; color:var(--gold-bright,#CDA36A); margin-bottom:8px;">📱 Cara Pasang di iPhone:</div>
+        <div>1. Tekan ikon <strong style="background:rgba(205,163,106,0.2); padding:1px 6px; border-radius:4px;">⬆ Share</strong> di bawah Safari</div>
+        <div>2. Tatal dan pilih <strong>"Add to Home Screen"</strong></div>
+        <div>3. Tekan <strong>"Add"</strong> — selesai! ✅</div>
+      </div>
+    </div>
+
+    <!-- Teks bawah -->
+    <div style="text-align:center; margin-top:12px; font-size:11px; color:var(--muted,#8a7260);">
+      Percuma • Tiada muat turun • Boleh buang bila-bila masa
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ── Daftar Service Worker ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('[PWA] Service Worker berjaya didaftar:', reg.scope);
+      }).catch(err => console.warn('[PWA] Service Worker gagal:', err));
+    });
+  }
+
+  const overlay  = document.getElementById('pwaInstallOverlay');
+  const installBtn = document.getElementById('pwaInstallBtn');
+  const dismissBtn = document.getElementById('pwaDismissBtn');
+  const iosGuide   = document.getElementById('pwaIosGuide');
+
+  let deferredPrompt = null;
+  const DISMISS_KEY  = 'koffi_pwa_dismissed_at';
+  const DISMISS_DAYS = 3; // Tunjuk semula selepas 3 hari jika dismiss
+
+  function shouldShowPopup() {
+    // Jika sudah dipasang sebagai PWA — jangan tunjuk
+    if (window.matchMedia('(display-mode: standalone)').matches) return false;
+    if (window.navigator.standalone === true) return false;
+    // Semak dismiss cache
+    const dismissedAt = localStorage.getItem(DISMISS_KEY);
+    if (dismissedAt) {
+      const elapsed = Date.now() - parseInt(dismissedAt, 10);
+      if (elapsed < DISMISS_DAYS * 86400000) return false;
+    }
+    return true;
+  }
+
+  function showOverlay() {
+    if (!overlay || !shouldShowPopup()) return;
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideOverlay() {
+    if (!overlay) return;
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+  }
+
+  // ── Detect iOS Safari ──
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  // ── Android/Chrome: Tangkap beforeinstallprompt ──
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Tunjuk popup selepas 4 saat (bagi masa user scroll dan tengok app dulu)
+    setTimeout(() => {
+      if (installBtn) installBtn.style.display = 'block';
+      showOverlay();
+    }, 4000);
+  });
+
+  // ── iOS: Tunjuk arahan manual ──
+  if (isIOS && isSafari) {
+    setTimeout(() => {
+      if (iosGuide) iosGuide.style.display = 'block';
+      showOverlay();
+    }, 5000);
+  }
+
+  // ── Tekan Pasang (Android 1-klik) ──
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      hideOverlay();
+      if (outcome === 'accepted') {
+        // Toast kecil kejayaan
+        const t = document.createElement('div');
+        t.textContent = '🎉 App Koffi berjaya dipasang!';
+        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#CDA36A;color:#1a1208;padding:10px 20px;border-radius:20px;font-weight:700;font-size:13px;z-index:99999;animation:fadeIn .3s ease;white-space:nowrap;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3500);
+      }
+    });
+  }
+
+  // ── Dismiss ──
+  if (dismissBtn) dismissBtn.addEventListener('click', hideOverlay);
+  if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) hideOverlay(); });
+
+  // Bersihkan bila sudah pasang
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    hideOverlay();
+  });
+})();
 </script>
 </body>
 </html>
