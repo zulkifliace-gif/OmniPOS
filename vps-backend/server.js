@@ -6721,6 +6721,13 @@ let inMemoryLuckySettings = {
 
 let inMemoryLuckyGifts = [];
 let inMemoryLuckyClaims = [];
+let inMemoryEventLock = {
+  enabled: false,
+  unlockAt: null,
+  eventTitle: 'Cabutan Bertuah Khas',
+  noticeText: 'Event akan berakhir pada waktu yang ditetapkan. Sila simpan resit anda!',
+  updatedAt: new Date().toISOString()
+};
 
 // Helper Jana Kod 5 Aksara Unik (1 Simbol, 2 Nombor, 2 Huruf)
 function generate5CharLuckyCode(existingSet = new Set()) {
@@ -6764,7 +6771,10 @@ async function initLuckyDrawState() {
     const { data: clData } = await supabase.from('pos_settings').select('value').eq('key', 'lucky_draw_claims').maybeSingle();
     if (clData && Array.isArray(clData.value)) inMemoryLuckyClaims = clData.value;
 
-    console.log(`🎁 [LUCKY DRAW] Mod: ${inMemoryLuckySettings.earningMode} | Hadiah: ${inMemoryLuckyGifts.length} | Tuntutan: ${inMemoryLuckyClaims.length}`);
+    const { data: lockData } = await supabase.from('pos_settings').select('value').eq('key', 'lucky_event_lock').maybeSingle();
+    if (lockData && lockData.value) inMemoryEventLock = { ...inMemoryEventLock, ...lockData.value };
+
+    console.log(`🎁 [LUCKY DRAW] Mod: ${inMemoryLuckySettings.earningMode} | Hadiah: ${inMemoryLuckyGifts.length} | Tuntutan: ${inMemoryLuckyClaims.length} | Kunci Acara: ${inMemoryEventLock.enabled ? 'ON' : 'OFF'}`);
   } catch (err) {
     console.warn('⚠️ [LUCKY DRAW] Gagal muat dari Supabase:', err.message);
   }
@@ -7046,30 +7056,40 @@ app.post('/api/pos/lucky-draw/gifts', requireStaffAuth, async (req, res) => {
     const { name, type, productId, productName, cost, marketPrice, img, code } = req.body;
     if (!name && !productName) return res.status(400).json({ success: false, error: 'Nama hadiah diperlukan.' });
 
-    let assignedCode = code ? code.trim().toLowerCase() : null;
+    let assignedCode = null;
+    const finalGiftName = name || productName;
 
-    if (!assignedCode) {
-      // Cari kod yang belum digunakan dalam pool (belum guna)
+    // Jika pengguna pilih kod tertentu (bukan 'auto')
+    if (code && String(code).trim() && String(code).trim().toLowerCase() !== 'auto') {
+      assignedCode = String(code).trim().toLowerCase();
       if (supabase) {
-        const { data: avail } = await supabase.from('lucky_codes').select('*').eq('is_printed', false).eq('is_used', false).limit(1);
-        if (avail && avail[0]) {
-          assignedCode = avail[0].code;
-          await supabase.from('lucky_codes').update({ prize_name: name || productName, is_used: false }).eq('id', avail[0].id);
+        const { data: existCode } = await supabase.from('lucky_codes').select('*').ilike('code', assignedCode).maybeSingle();
+        if (!existCode) {
+          await supabase.from('lucky_codes').insert({ code: assignedCode, prize_name: finalGiftName, is_used: false, is_printed: false });
         } else {
-          // Auto generate 1 kod
+          await supabase.from('lucky_codes').update({ prize_name: finalGiftName, is_used: false }).eq('id', existCode.id);
+        }
+      }
+    } else {
+      // Auto-ambil secara RAWAK daripada senarai Kod Bertuah Terkini yang ada dalam pangkalan data
+      if (supabase) {
+        // Cari semua kod yang belum digunakan / belum dituntut
+        const { data: availList } = await supabase.from('lucky_codes').select('*').eq('is_used', false);
+        if (availList && availList.length > 0) {
+          // Pilih satu kod secara RAWAK daripada senarai yang wujud
+          const randomItem = availList[Math.floor(Math.random() * availList.length)];
+          assignedCode = randomItem.code;
+          await supabase.from('lucky_codes').update({ prize_name: finalGiftName, is_used: false }).eq('id', randomItem.id);
+          console.log(`🎲 [LUCKY GIFT AUTO-PICK] Kod '${assignedCode}' dipilih secara rawak daripada ${availList.length} kod terkini`);
+        } else {
+          // Jika tiada sebarang kod dalam sistem, jana 1 kod dan masukkan ke lucky_codes
           const fresh = generate5CharLuckyCode();
           assignedCode = fresh;
-          await supabase.from('lucky_codes').insert({ code: fresh, prize_name: name || productName, is_used: false, is_printed: false });
+          await supabase.from('lucky_codes').insert({ code: fresh, prize_name: finalGiftName, is_used: false, is_printed: false });
+          console.log(`🎲 [LUCKY GIFT FRESH] Tiada kod sedia ada, kod baru '${fresh}' dijana ke lucky_codes`);
         }
       } else {
         assignedCode = generate5CharLuckyCode();
-      }
-    } else if (supabase) {
-      const { data: existCode } = await supabase.from('lucky_codes').select('*').ilike('code', assignedCode).maybeSingle();
-      if (!existCode) {
-        await supabase.from('lucky_codes').insert({ code: assignedCode, prize_name: name || productName, is_used: false, is_printed: false });
-      } else {
-        await supabase.from('lucky_codes').update({ prize_name: name || productName }).eq('id', existCode.id);
       }
     }
 
@@ -7086,7 +7106,6 @@ app.post('/api/pos/lucky-draw/gifts', requireStaffAuth, async (req, res) => {
       status: 'available',
       created_at: new Date().toISOString()
     };
-
     inMemoryLuckyGifts.unshift(newGift);
 
     if (supabase) {
@@ -7134,6 +7153,60 @@ app.delete('/api/pos/lucky-draw/gifts/:id', requireStaffAuth, async (req, res) =
   }
 });
 
+// 8B. GET & POST KUNCI ACARA CABUTAN BERTUAH (EVENT COUNTDOWN LOCK)
+app.get(['/api/pos/lucky-draw/event-lock', '/api/loyalty/lucky-draw/event-lock'], async (req, res) => {
+  if (supabase) {
+    try {
+      const { data } = await supabase.from('pos_settings').select('value').eq('key', 'lucky_event_lock').maybeSingle();
+      if (data && data.value) inMemoryEventLock = { ...inMemoryEventLock, ...data.value };
+    } catch (e) {}
+  }
+  
+  const now = Date.now();
+  const isLocked = Boolean(inMemoryEventLock.enabled && inMemoryEventLock.unlockAt && new Date(inMemoryEventLock.unlockAt).getTime() > now);
+  
+  res.json({
+    success: true,
+    eventLock: {
+      ...inMemoryEventLock,
+      isLocked,
+      remainingMs: isLocked ? Math.max(0, new Date(inMemoryEventLock.unlockAt).getTime() - now) : 0
+    }
+  });
+});
+
+app.post('/api/pos/lucky-draw/event-lock', requireStaffAuth, async (req, res) => {
+  try {
+    const { enabled, unlockAt, eventTitle, noticeText } = req.body;
+    inMemoryEventLock = {
+      enabled: Boolean(enabled),
+      unlockAt: unlockAt || null,
+      eventTitle: (eventTitle || 'Cabutan Bertuah Khas').trim(),
+      noticeText: (noticeText || 'Event akan berakhir pada waktu yang ditetapkan. Sila simpan resit anda!').trim(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (supabase) {
+      await supabase.from('pos_settings').upsert({
+        key: 'lucky_event_lock',
+        value: inMemoryEventLock,
+        updated_at: new Date().toISOString()
+      });
+      await supabase.from('pos_audit_logs').insert({
+        action: 'lucky_event_lock_updated',
+        cashier_name: req.staff ? req.staff.name : (req.body.cashierName || 'Pengurus Utama'),
+        details: inMemoryEventLock
+      });
+    }
+
+    console.log(`🔒 [LUCKY EVENT LOCK] Status: ${inMemoryEventLock.enabled ? 'AKTIF (Terkunci)' : 'MATI (Terbuka)'} | Unlock: ${inMemoryEventLock.unlockAt}`);
+    res.json({ success: true, message: 'Tetapan kunci acara berjaya disimpan ✨', eventLock: inMemoryEventLock });
+  } catch (err) {
+    console.error('❌ POST /api/pos/lucky-draw/event-lock error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 9. GET Senarai Tuntutan Hadiah Pemenang (POS & Loyalty)
 app.get(['/api/pos/lucky-draw/claims', '/api/loyalty/lucky-draw/claims'], async (req, res) => {
   try {
@@ -7157,12 +7230,19 @@ app.post(['/api/loyalty/lucky-draw/enter', '/api/pos/lucky-draw/enter'], require
     if (!code) return res.status(400).json({ success: false, error: 'Sila masukkan kod bertuah.' });
     if (!customerPhone) return res.status(400).json({ success: false, error: 'Sila log masuk dengan akaun anda dahulu.' });
 
-    const cleanCode = String(code).trim().toLowerCase();
-    const cleanPhone = normalizePhone(customerPhone);
-    const clientKey = `${cleanPhone}_${req.ip || 'ip'}`;
-
-    // SEMAKAN RATE LIMITING & COOLDOWN 24 JAM (5 KALI GAGAL BERTURUT-TURUT)
+    // SEMAKAN KUNCI ACARA (EVENT COUNTDOWN LOCK)
     const now = Date.now();
+    if (inMemoryEventLock.enabled && inMemoryEventLock.unlockAt && new Date(inMemoryEventLock.unlockAt).getTime() > now) {
+      const formattedDate = new Date(inMemoryEventLock.unlockAt).toLocaleDateString('ms-MY', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      return res.status(403).json({
+        success: false,
+        isEventLocked: true,
+        unlockAt: inMemoryEventLock.unlockAt,
+        error: `Cabutan bertuah sedang dikunci sempena ${inMemoryEventLock.eventTitle || 'Acara Khas'}. Acara akan dibuka pada ${formattedDate}. Sila simpan resit anda!`
+      });
+    }
     let lockData = luckyDrawLockoutMap.get(clientKey) || { failedCount: 0, lockoutExpiresAt: 0 };
 
     if (lockData.lockoutExpiresAt > now) {

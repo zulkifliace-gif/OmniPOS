@@ -2195,6 +2195,46 @@
           </button>
         </div>
 
+        <!-- Card: Kunci Acara Cabutan Bertuah (Event Countdown Lock) -->
+        <div class="card" style="margin-bottom:16px; border:1px solid rgba(205,163,106,0.3); background:linear-gradient(135deg, rgba(205,163,106,0.08), rgba(208,114,63,0.06)); border-radius:var(--radius-md); padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px;">
+            <div>
+              <h3 style="font-family:'Fraunces',serif; font-size:16px; margin:0 0 4px; color:var(--gold-bright); display:flex; align-items:center; gap:8px;">
+                🔒 Kunci Cabutan Bertuah (Event Countdown Lock)
+              </h3>
+              <p style="font-size:11.5px; color:var(--muted); margin:0; line-height:1.4;">
+                Bila dihidupkan (ON), pelanggan di laman kad ahli hanya akan melihat paparan <b>Countdown Acara</b>. Sistem akan automatik dibuka semula apabila masa acara tiba.
+              </p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="luckyEventLockToggle">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <div id="luckyEventLockFields" style="display:none; border-top:1px dashed var(--hairline); padding-top:14px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:12px;">
+              <div>
+                <label style="font-size:12px; font-weight:700; color:var(--cream-dim); display:block; margin-bottom:6px;">Tarikh &amp; Masa Buka Cabutan (Masa Tamat Kunci):</label>
+                <input type="datetime-local" id="luckyEventLockDatetime" style="width:100%; background:var(--surface-2); border:1px solid var(--hairline); border-radius:9px; padding:9px 12px; color:var(--gold-bright); font-weight:700; font-family:'IBM Plex Mono',monospace; font-size:12.5px;">
+              </div>
+              <div>
+                <label style="font-size:12px; font-weight:700; color:var(--cream-dim); display:block; margin-bottom:6px;">Tajuk / Nama Acara:</label>
+                <input type="text" id="luckyEventTitleInput" placeholder="cth. Cabutan Bertuah Sempena Sambutan Merdeka" style="width:100%; background:var(--surface-2); border:1px solid var(--hairline); border-radius:9px; padding:9px 12px; color:var(--cream); font-size:12.5px;">
+              </div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:12px; font-weight:700; color:var(--cream-dim); display:block; margin-bottom:6px;">Notis Tambahan untuk Pelanggan (Label Notis):</label>
+              <input type="text" id="luckyEventNoticeInput" placeholder="cth. Sila simpan resit anda untuk masukkan kod bertuah bila acara dibuka!" style="width:100%; background:var(--surface-2); border:1px solid var(--hairline); border-radius:9px; padding:9px 12px; color:var(--cream); font-size:12px;">
+            </div>
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="button" class="btn-save" id="btnSaveLuckyEventLock" style="padding:9px 18px; font-size:12.5px; border-radius:9px; display:inline-flex; align-items:center; gap:6px;">
+                💾 Simpan Tetapan Acara
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Paparan Kompak & Kemas Kod Bertuah (Tidak Memenuhi Skrin) -->
         <div class="code-list-container" style="background:var(--surface); border:1px solid var(--hairline); border-radius:var(--radius-md); padding:14px 16px; margin-bottom:24px;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
@@ -4238,6 +4278,26 @@ app.post(['/api/webhook/whatsapp', '/api/whatsapp/webhook'], async (req, res) =>
         </div>
       </div>
     </div>
+    <!-- Pemadanan Kod Bertuah -->
+    <div class="field" id="giftCodeSelectionField" style="margin-top:12px; border-top:1px dashed var(--hairline); padding-top:12px;">
+      <label style="font-size:12px; font-weight:700; color:var(--cream); display:block; margin-bottom:6px;">Pemadanan Kod Bertuah untuk Hadiah Ini:</label>
+      <div style="background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px; padding:10px 12px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; font-weight:700; color:var(--gold-bright); margin-bottom:8px;">
+          <input type="radio" name="giftCodeMode" id="giftCodeAutoRadio" value="auto" checked style="accent-color:var(--gold-bright);">
+          🎲 Auto-Ambil Rawak dari Senarai Kod Terkini (Disyorkan)
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--cream-dim);">
+          <input type="radio" name="giftCodeMode" id="giftCodeManualRadio" value="manual" style="accent-color:var(--gold-bright);">
+          🎯 Pilih Kod Tertentu daripada Senarai Terkini
+        </label>
+        <div id="giftManualCodeSelectWrap" style="display:none; margin-top:8px;">
+          <select id="giftManualCodeSelect" style="width:100%; background:var(--surface); border:1px solid var(--hairline); border-radius:8px; padding:8px 10px; color:var(--gold-bright); font-weight:700; font-size:13px; font-family:'IBM Plex Mono',monospace; outline:none;"></select>
+          <p id="giftManualCodeHint" style="font-size:11px; color:var(--muted); margin:4px 0 0;"></p>
+        </div>
+      </div>
+      <p class="field-hint" style="font-size:11px; color:var(--muted); margin-top:4px;">* Kod hadiah akan diambil daripada senarai kod bertuah yang sah dalam pangkalan data.</p>
+    </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" id="giftCancelBtn">Batal</button>
       <button class="btn-save" id="giftSaveBtn">Simpan</button>
@@ -9879,6 +9939,127 @@ if(btnSaveLuckySettings){
   });
 }
 
+/* ================= TETAPAN KUNCI ACARA CABUTAN BERTUAH (EVENT LOCK) ================= */
+let luckyEventLockState = {
+  enabled: false,
+  unlockAt: null,
+  eventTitle: 'Cabutan Bertuah Khas',
+  noticeText: 'Event akan berakhir pada waktu yang ditetapkan. Sila simpan resit anda!'
+};
+
+async function fetchLuckyEventLock(){
+  const VPS_BACKEND_URL = window.VPS_BACKEND_URL || 'http://localhost:3000';
+  try {
+    const res = await fetch(`${VPS_BACKEND_URL}/api/pos/lucky-draw/event-lock`);
+    if(res.ok){
+      const data = await res.json();
+      if(data.success && data.eventLock){
+        luckyEventLockState = data.eventLock;
+        syncLuckyEventLockUI();
+      }
+    }
+  } catch(e){
+    console.warn('⚠️ Gagal muat status kunci acara:', e.message);
+  }
+}
+
+function syncLuckyEventLockUI(){
+  const toggle = document.getElementById('luckyEventLockToggle');
+  const fields = document.getElementById('luckyEventLockFields');
+  const dtInput = document.getElementById('luckyEventLockDatetime');
+  const titleInput = document.getElementById('luckyEventTitleInput');
+  const noticeInput = document.getElementById('luckyEventNoticeInput');
+
+  if(toggle) toggle.checked = Boolean(luckyEventLockState.enabled);
+  if(fields) fields.style.display = luckyEventLockState.enabled ? 'block' : 'none';
+
+  if(dtInput && luckyEventLockState.unlockAt){
+    try {
+      const d = new Date(luckyEventLockState.unlockAt);
+      if(!isNaN(d.getTime())){
+        const offset = d.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(d.getTime() - offset)).toISOString().slice(0, 16);
+        dtInput.value = localISOTime;
+      }
+    } catch(e){}
+  }
+  if(titleInput && luckyEventLockState.eventTitle) titleInput.value = luckyEventLockState.eventTitle;
+  if(noticeInput && luckyEventLockState.noticeText) noticeInput.value = luckyEventLockState.noticeText;
+}
+
+const luckyEventLockToggle = document.getElementById('luckyEventLockToggle');
+if(luckyEventLockToggle){
+  luckyEventLockToggle.addEventListener('change', () => {
+    luckyEventLockState.enabled = luckyEventLockToggle.checked;
+    const fields = document.getElementById('luckyEventLockFields');
+    if(fields) fields.style.display = luckyEventLockToggle.checked ? 'block' : 'none';
+    
+    // Set default datetime jika kosong (+2 jam dari sekarang)
+    const dtInput = document.getElementById('luckyEventLockDatetime');
+    if(luckyEventLockToggle.checked && dtInput && !dtInput.value){
+      const defaultDate = new Date(Date.now() + 2 * 3600 * 1000);
+      const offset = defaultDate.getTimezoneOffset() * 60000;
+      dtInput.value = (new Date(defaultDate.getTime() - offset)).toISOString().slice(0, 16);
+    }
+  });
+}
+
+const btnSaveLuckyEventLock = document.getElementById('btnSaveLuckyEventLock');
+if(btnSaveLuckyEventLock){
+  btnSaveLuckyEventLock.addEventListener('click', async () => {
+    const toggle = document.getElementById('luckyEventLockToggle');
+    const dtInput = document.getElementById('luckyEventLockDatetime');
+    const titleInput = document.getElementById('luckyEventTitleInput');
+    const noticeInput = document.getElementById('luckyEventNoticeInput');
+
+    const enabled = toggle ? toggle.checked : false;
+    let unlockAt = null;
+
+    if(enabled){
+      if(!dtInput || !dtInput.value){
+        showToast('Sila tetapkan tarikh dan masa buka cabutan');
+        return;
+      }
+      unlockAt = new Date(dtInput.value).toISOString();
+      if(new Date(unlockAt).getTime() <= Date.now()){
+        showToast('Tarikh & masa mesti pada masa hadapan');
+        return;
+      }
+    }
+
+    const payload = {
+      enabled,
+      unlockAt,
+      eventTitle: titleInput ? titleInput.value.trim() : 'Cabutan Bertuah Khas',
+      noticeText: noticeInput ? noticeInput.value.trim() : 'Event akan berakhir pada waktu yang ditetapkan. Sila simpan resit anda!'
+    };
+
+    btnSaveLuckyEventLock.disabled = true;
+    btnSaveLuckyEventLock.textContent = 'Menyimpan...';
+
+    const VPS_BACKEND_URL = window.VPS_BACKEND_URL || 'http://localhost:3000';
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/pos/lucky-draw/event-lock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if(res.ok && data.success){
+        luckyEventLockState = data.eventLock || payload;
+        showToast(enabled ? '🔒 Kunci Countdown Acara diaktifkan ✨' : '🔓 Kunci Acara dimatikan (Cabutan Terbuka) ✨');
+      } else {
+        showToast(data.error || 'Gagal menyimpan tetapan kunci acara');
+      }
+    } catch(err){
+      showToast('Ralat sambungan: ' + err.message);
+    } finally {
+      btnSaveLuckyEventLock.disabled = false;
+      btnSaveLuckyEventLock.textContent = '💾 Simpan Tetapan Acara';
+    }
+  });
+}
+
 /* ================= SENARAI KOD BERTUAH (REALTIME) ================= */
 async function fetchLiveLuckyCodes(){
   const VPS_BACKEND_URL = window.VPS_BACKEND_URL || 'http://localhost:3000';
@@ -10199,9 +10380,44 @@ if(document.getElementById('addGiftBtn')){
     }
     if(giftExternalFields) giftExternalFields.style.display = 'block';
     if(giftMenuFields) giftMenuFields.style.display = 'none';
+
+    // Inisialisasi Pilihan Kod Bertuah
+    const autoRadio = document.getElementById('giftCodeAutoRadio');
+    const manualRadio = document.getElementById('giftCodeManualRadio');
+    const manualWrap = document.getElementById('giftManualCodeSelectWrap');
+    const codeSelect = document.getElementById('giftManualCodeSelect');
+    const codeHint = document.getElementById('giftManualCodeHint');
+
+    if(autoRadio) autoRadio.checked = true;
+    if(manualWrap) manualWrap.style.display = 'none';
+
+    // Senarai kod yang sah dan belum digunakan
+    const availCodes = (codes || []).filter(c => !c.used);
+    if(codeSelect){
+      if(availCodes.length > 0){
+        codeSelect.innerHTML = availCodes.map(c => `<option value="${c.code}">${c.code.toUpperCase()} (${c.status})</option>`).join('');
+        if(codeHint) codeHint.textContent = `Terdapat ${availCodes.length} kod sedia ada dalam pool.`;
+      } else {
+        codeSelect.innerHTML = `<option value="auto">Tiada kod sedia ada — Jana automatik</option>`;
+        if(codeHint) codeHint.textContent = `Pool kod kosong. Sistem akan auto-jana 1 kod baru.`;
+      }
+    }
+
     if(giftModalOverlay) giftModalOverlay.classList.add('show');
   });
 }
+
+// Handler radio mode kod
+['giftCodeAutoRadio', 'giftCodeManualRadio'].forEach(rId => {
+  const rEl = document.getElementById(rId);
+  if(rEl){
+    rEl.addEventListener('change', () => {
+      const isManual = document.getElementById('giftCodeManualRadio')?.checked;
+      const manualWrap = document.getElementById('giftManualCodeSelectWrap');
+      if(manualWrap) manualWrap.style.display = isManual ? 'block' : 'none';
+    });
+  }
+});
 
 if(giftMenuProductInput){
   giftMenuProductInput.addEventListener('change', () => {
@@ -10277,6 +10493,10 @@ if(document.getElementById('giftSaveBtn')){
       cost = parseFloat(giftMenuCostInput ? giftMenuCostInput.value : (p.cost || p.cost_price || (p.price*0.35))) || 0;
     }
 
+    const isManualCode = document.getElementById('giftCodeManualRadio')?.checked;
+    const manualCodeSelect = document.getElementById('giftManualCodeSelect');
+    const chosenCode = isManualCode && manualCodeSelect ? manualCodeSelect.value : 'auto';
+
     const saveBtn = document.getElementById('giftSaveBtn');
     saveBtn.disabled = true;
     saveBtn.textContent = 'Menyimpan...';
@@ -10292,6 +10512,7 @@ if(document.getElementById('giftSaveBtn')){
           productId: editingGiftType==='menu' ? productId : null,
           productName: editingGiftType==='menu' ? name : null,
           cost: cost,
+          code: chosenCode,
           img: editingGiftType==='external' ? uploadedGiftImg : null,
           cashierName: currentUser ? currentUser.name : 'Pengurus Utama'
         })
@@ -10309,7 +10530,7 @@ if(document.getElementById('giftSaveBtn')){
         await fetchLiveLuckyGifts();
         await fetchLiveLuckyCodes();
         giftModalOverlay.classList.remove('show');
-        showToast(`Hadiah disimpan · Kod ${data.gift ? data.gift.code : ''} diberikan ✨`);
+        showToast(`Hadiah '${name}' disimpan · Kod: ${data.gift ? data.gift.code.toUpperCase() : ''} ✨`);
       } else {
         showToast(data.error || 'Gagal menyimpan hadiah');
       }
@@ -15863,6 +16084,7 @@ fetchLiveLuckySettings();
 fetchLiveLuckyCodes();
 fetchLiveLuckyGifts();
 fetchLiveLuckyClaims();
+fetchLuckyEventLock();
 renderCodes();
 renderGifts();
 renderLeaderboard();

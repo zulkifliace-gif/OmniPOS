@@ -1409,6 +1409,39 @@
   <div class="section">
     <div class="lucky-card" id="luckyCard">
 
+      <!-- PAPARAN KUNCI ACARA CABUTAN BERTUAH (EVENT COUNTDOWN MODE) -->
+      <div class="lucky-state lucky-event-locked" id="luckyEventCountdownBox" hidden style="text-align:center; padding:18px 12px;">
+        <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(205,163,106,0.15); border:1px solid rgba(205,163,106,0.35); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; color:var(--gold-bright); margin-bottom:8px;">
+          <span style="font-size:13px;">✨</span> ACARA KHAS AKAN DIBUKA
+        </div>
+        <h4 id="luckyEventTitle" style="font-family:'Fraunces',serif; font-size:17px; font-weight:700; color:var(--cream); margin:0 0 12px;">Cabutan Bertuah Khas</h4>
+
+        <!-- Kotak Countdown Masa (Hari, Jam, Minit, Saat) -->
+        <div id="luckyCountdownGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; max-width:280px; margin:0 auto 12px;">
+          <div style="background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px; padding:8px 4px;">
+            <div id="cdDays" style="font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:800; color:var(--gold-bright); line-height:1.1;">00</div>
+            <div style="font-size:9px; color:var(--muted); font-weight:600; text-transform:uppercase; margin-top:2px;">Hari</div>
+          </div>
+          <div style="background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px; padding:8px 4px;">
+            <div id="cdHours" style="font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:800; color:var(--gold-bright); line-height:1.1;">00</div>
+            <div style="font-size:9px; color:var(--muted); font-weight:600; text-transform:uppercase; margin-top:2px;">Jam</div>
+          </div>
+          <div style="background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px; padding:8px 4px;">
+            <div id="cdMins" style="font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:800; color:var(--gold-bright); line-height:1.1;">00</div>
+            <div style="font-size:9px; color:var(--muted); font-weight:600; text-transform:uppercase; margin-top:2px;">Minit</div>
+          </div>
+          <div style="background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px; padding:8px 4px;">
+            <div id="cdSecs" style="font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:800; color:var(--gold-bright); line-height:1.1;">00</div>
+            <div style="font-size:9px; color:var(--muted); font-weight:600; text-transform:uppercase; margin-top:2px;">Saat</div>
+          </div>
+        </div>
+
+        <!-- Label Notis Kecil Pengguna -->
+        <p id="luckyEventNotice" style="font-size:11.5px; color:var(--cream-dim); line-height:1.45; margin:0; background:rgba(0,0,0,0.25); border-radius:8px; padding:6px 10px;">
+          📢 <span id="luckyEventNoticeText">Event akan berakhir pada waktu yang ditetapkan. Sila simpan resit anda!</span>
+        </p>
+      </div>
+
       <!-- CABUTAN BERTUAH / LUCKY DRAW (5 PETAK PIN STYLE) -->
       <div class="lucky-state" id="luckyForm">
         <div class="lucky-row-head" style="display:flex; justify-content:space-between; align-items:center;">
@@ -2502,7 +2535,113 @@
   const btnLuckyGuide = document.getElementById('btnLuckyGuide');
   const luckyGuideModal = document.getElementById('luckyGuideModal');
   const btnCloseLuckyGuide = document.getElementById('btnCloseLuckyGuide');
-  const btnCloseLuckyGuideX = document.getElementById('btnCloseLuckyGuideX');
+  // ===================================================================
+  // KUNCI ACARA CABUTAN BERTUAH (EVENT COUNTDOWN LOCK ENGINE)
+  // ===================================================================
+  let eventLockCountdownInterval = null;
+
+  async function fetchLoyaltyEventLock(){
+    const VPS_BACKEND_URL = window.VPS_BACKEND_URL || (
+      (typeof window !== 'undefined' && window.location && window.location.protocol && window.location.protocol.startsWith('http'))
+        ? window.location.origin
+        : 'http://localhost:3000'
+    );
+    try {
+      const res = await fetch(`${VPS_BACKEND_URL}/api/loyalty/lucky-draw/event-lock`);
+      if(res.ok){
+        const data = await res.json();
+        if(data.success && data.eventLock){
+          applyEventLockState(data.eventLock);
+        }
+      }
+    } catch(e){
+      console.warn('Backend event lock fetch failed:', e.message);
+    }
+  }
+
+  function applyEventLockState(lockInfo){
+    const cdBox = document.getElementById('luckyEventCountdownBox');
+    const lForm = document.getElementById('luckyForm');
+    const lWin = document.getElementById('luckyWin');
+    const titleEl = document.getElementById('luckyEventTitle');
+    const noticeTextEl = document.getElementById('luckyEventNoticeText');
+
+    if(!cdBox || !lForm) return;
+
+    const now = Date.now();
+    const isLocked = Boolean(lockInfo && lockInfo.enabled && lockInfo.unlockAt && new Date(lockInfo.unlockAt).getTime() > now);
+
+    if(isLocked){
+      if(titleEl && lockInfo.eventTitle) titleEl.textContent = lockInfo.eventTitle;
+      if(noticeTextEl){
+        const formattedTime = new Date(lockInfo.unlockAt).toLocaleDateString('ms-MY', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        noticeTextEl.textContent = lockInfo.noticeText 
+          ? `${lockInfo.noticeText} (Event akan berakhir pada ${formattedTime})`
+          : `Event akan berakhir pada ${formattedTime}. Sila simpan resit anda!`;
+      }
+
+      cdBox.hidden = false;
+      lForm.hidden = true;
+      if(lWin) lWin.hidden = true;
+
+      startCountdownTicker(new Date(lockInfo.unlockAt).getTime());
+    } else {
+      if(eventLockCountdownInterval) clearInterval(eventLockCountdownInterval);
+      cdBox.hidden = true;
+      if(lWin && !lWin.hidden){
+        // Kekalkan status kemenangan jika aktif
+      } else {
+        lForm.hidden = false;
+        lForm.style.opacity = '1';
+      }
+    }
+  }
+
+  function startCountdownTicker(targetTimestamp){
+    if(eventLockCountdownInterval) clearInterval(eventLockCountdownInterval);
+
+    function tick(){
+      const now = Date.now();
+      const diff = targetTimestamp - now;
+
+      if(diff <= 0){
+        clearInterval(eventLockCountdownInterval);
+        eventLockCountdownInterval = null;
+
+        // Auto buka semula blok cabutan bertuah untuk orang ramai masukkan kod
+        const cdBox = document.getElementById('luckyEventCountdownBox');
+        const lForm = document.getElementById('luckyForm');
+        if(cdBox) cdBox.hidden = true;
+        if(lForm){
+          lForm.hidden = false;
+          lForm.style.opacity = '0';
+          requestAnimationFrame(() => { lForm.style.opacity = '1'; });
+        }
+        showToast('🎉 Acara Cabutan Bertuah Kini Dibuka! Sila masukkan 5-aksara kod anda ✨');
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const elDays = document.getElementById('cdDays');
+      const elHours = document.getElementById('cdHours');
+      const elMins = document.getElementById('cdMins');
+      const elSecs = document.getElementById('cdSecs');
+
+      if(elDays) elDays.textContent = String(days).padStart(2, '0');
+      if(elHours) elHours.textContent = String(hours).padStart(2, '0');
+      if(elMins) elMins.textContent = String(minutes).padStart(2, '0');
+      if(elSecs) elSecs.textContent = String(seconds).padStart(2, '0');
+    }
+
+    tick();
+    eventLockCountdownInterval = setInterval(tick, 1000);
+  }
 
   // Modal 1: Panduan Tebus Hadiah (1 Langkah Ringkas)
   function openLuckyGuideModal(){
@@ -4194,6 +4333,10 @@
       }
     });
   }
+
+  // Inisialisasi Kunci Acara Cabutan Bertuah (Event Countdown)
+  fetchLoyaltyEventLock();
+  setInterval(fetchLoyaltyEventLock, 15000);
 
   // Pastikan skrol terbuka bebas pada permulaan muatan laman
   unlockScroll();
