@@ -7230,6 +7230,10 @@ app.post(['/api/loyalty/lucky-draw/enter', '/api/pos/lucky-draw/enter'], require
     if (!code) return res.status(400).json({ success: false, error: 'Sila masukkan kod bertuah.' });
     if (!customerPhone) return res.status(400).json({ success: false, error: 'Sila log masuk dengan akaun anda dahulu.' });
 
+    const cleanCode = String(code).trim().toLowerCase();
+    const cleanPhone = normalizePhone(customerPhone);
+    const clientKey = `${cleanPhone}_${req.ip || 'ip'}`;
+
     // SEMAKAN KUNCI ACARA (EVENT COUNTDOWN LOCK)
     const now = Date.now();
     if (inMemoryEventLock.enabled && inMemoryEventLock.unlockAt && new Date(inMemoryEventLock.unlockAt).getTime() > now) {
@@ -7243,6 +7247,8 @@ app.post(['/api/loyalty/lucky-draw/enter', '/api/pos/lucky-draw/enter'], require
         error: `Cabutan bertuah sedang dikunci sempena ${inMemoryEventLock.eventTitle || 'Acara Khas'}. Acara akan dibuka pada ${formattedDate}. Sila simpan resit anda!`
       });
     }
+
+    // SEMAKAN RATE LIMITING & COOLDOWN 24 JAM (5 KALI GAGAL BERTURUT-TURUT)
     let lockData = luckyDrawLockoutMap.get(clientKey) || { failedCount: 0, lockoutExpiresAt: 0 };
 
     if (lockData.lockoutExpiresAt > now) {
