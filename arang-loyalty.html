@@ -1436,6 +1436,17 @@
           </div>
         </div>
 
+        <!-- Butang Info & Senarai Hadiah semasa Event Countdown -->
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:12px;">
+          <button type="button" id="btnEventLockGuide" title="Panduan Cara Claim Hadiah" aria-label="Panduan Cara Claim Hadiah" style="background:rgba(205,163,106,0.14); border:1px solid rgba(205,163,106,0.3); height:34px; padding:0 14px; border-radius:20px; cursor:pointer; color:var(--gold-bright); display:inline-flex; align-items:center; justify-content:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-weight:800; font-size:12px;">
+            <span style="width:18px; height:18px; border-radius:50%; background:rgba(205,163,106,0.3); display:flex; align-items:center; justify-content:center; font-size:11px;">i</span>
+            Cara Claim
+          </button>
+          <button type="button" id="btnEventLockPrizes" title="Lihat Senarai Hadiah Cabutan Bertuah" aria-label="Lihat Senarai Hadiah" style="background:rgba(205,163,106,0.14); border:1px solid rgba(205,163,106,0.3); height:34px; padding:0 14px; border-radius:20px; cursor:pointer; color:var(--gold-bright); display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:13px; font-weight:700;">
+            🎁 Lihat Hadiah
+          </button>
+        </div>
+
         <!-- Label Notis Kecil Pengguna -->
         <p id="luckyEventNotice" style="font-size:11.5px; color:var(--cream-dim); line-height:1.45; margin:0; background:rgba(0,0,0,0.25); border-radius:8px; padding:6px 10px;">
           📢 <span id="luckyEventNoticeText">Event akan berakhir pada waktu yang ditetapkan. Sila simpan resit anda!</span>
@@ -2696,6 +2707,14 @@
   if(luckyPrizesModal) luckyPrizesModal.addEventListener('click', (e)=>{
     if(e.target === luckyPrizesModal) closeLuckyPrizesModal();
   });
+
+  // Butang Event Lock: "i" Cara Claim → buka modal panduan yang sama
+  const btnEventLockGuide = document.getElementById('btnEventLockGuide');
+  if(btnEventLockGuide) btnEventLockGuide.addEventListener('click', (e)=>{ e.stopPropagation(); openLuckyGuideModal(); });
+
+  // Butang Event Lock: "🎁 Lihat Hadiah" → buka modal senarai hadiah yang sama
+  const btnEventLockPrizes = document.getElementById('btnEventLockPrizes');
+  if(btnEventLockPrizes) btnEventLockPrizes.addEventListener('click', (e)=>{ e.stopPropagation(); openLuckyPrizesModal(); });
 
   async function fetchLiveLuckyGiftsLoyalty(){
     const VPS_BACKEND_URL = window.VPS_BACKEND_URL || (
