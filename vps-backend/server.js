@@ -64,40 +64,25 @@ app.use(helmet({
   }
 }));
 
-// CORS Configuration
-const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || '';
-const allowedOrigins = rawAllowedOrigins
-  ? rawAllowedOrigins.split(',').map(o => o.trim()).filter(Boolean)
-  : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5500', 'https://koffi.coffee'];
-
+// CORS Configuration (Membenarkan akses dari IP VPS, Vercel, Netlify, dan Localhost)
 function isOriginAllowed(origin) {
-  if (!origin) return true;
-  if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return true;
-  try {
-    const parsed = new URL(origin);
-    if (parsed.hostname.endsWith('.ngrok-free.app') || parsed.hostname.endsWith('.ngrok.io') || parsed.hostname.endsWith('.ngrok-free.dev') || parsed.hostname.endsWith('.ngrok.dev') || parsed.hostname.includes('ngrok')) return true;
-  } catch (e) {}
-  return false;
+  return true;
 }
 
 app.use(cors({
-  origin: function(origin, callback) {
-    if (isOriginAllowed(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Akses CORS tidak dibenarkan bagi domain ini'));
-  },
+  origin: true,
   credentials: true
 }));
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (isOriginAllowed(origin)) {
-    if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
   }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('ngrok-skip-browser-warning', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, ngrok-skip-browser-warning');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, ngrok-skip-browser-warning, X-Requested-With');
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
